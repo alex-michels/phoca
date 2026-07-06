@@ -1,0 +1,37 @@
+# CI — runs on every push and pull request.
+# Keeps the two "after every change" rules honest even when nobody remembers:
+# typecheck must be clean, tests must be green. Uses `npm ci` (never bare
+# `npm install`) per CLAUDE.md hard rule 5 — the lockfile is the law.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install exact dependencies from lockfile
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests (interlock + fee math)
+        run: npm test
+
+      # Report-only: the known transitive advisories in the official Solana
+      # 1.x stack are triaged in docs/SECURITY-CHECKLIST.md §8 and must not
+      # block CI. A NEW advisory shows up here — read the log on every run.
+      - name: Dependency audit (report-only, see SECURITY-CHECKLIST §8)
+        run: npm run audit
+        continue-on-error: true

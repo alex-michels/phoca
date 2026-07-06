@@ -20,10 +20,11 @@ as the owner's textbook.
 
 ## Commands
 - `npm run wallet` — create devnet wallet + airdrop test SOL
-- `npm run create-token` — create the mint with transfer-fee extension
+- `npm run create-token` — create the mint with transfer-fee + metadata extensions
 - `npm run mint-supply` — mint total supply to the treasury
 - `npm run transfer-test` — demo transfer showing the charity fee being withheld
 - `npm run collect-fees` — sweep withheld fees into the charity treasury
+- `npm test` — interlock + fee-math test suite; must be green after every code edit
 - `npm run typecheck` — must be clean after every code edit
 - `npm run audit` — dependency check; NEVER `npm audit fix --force` (see SECURITY-CHECKLIST §8)
 
@@ -38,10 +39,14 @@ as the owner's textbook.
 5. Dependencies: official Solana Labs / Anza / Metaplex packages only; exact
    versions; run `npm run audit` after any dependency change; keep
    package-lock.json committed; use `npm ci` in any automation.
-6. After any code change, run `npm run typecheck` and fix errors before finishing.
+6. After any code change, run `npm run typecheck` AND `npm test`; fix failures
+   before finishing.
 7. Public-facing text (README, site copy, posts) must stay consistent with
    docs/COMPLIANCE-EU.md: no profit promises, risk-aware wording, charity
    claims only as implemented on-chain.
+8. Documentation stays true: every change or deletion gets a CHANGELOG.md
+   entry, and any doc the change invalidates (README, docs/*) is updated in
+   the SAME commit. No orphaned docs, no undocumented changes.
 
 ## Style
 - Small, numbered, single-purpose scripts in `scripts/`

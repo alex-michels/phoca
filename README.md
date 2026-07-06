@@ -34,13 +34,17 @@ Earth — exactly the kind of animal this project exists to help.
 | Path | What it is |
 |---|---|
 | `CLAUDE.md` | Instructions for Claude Code (your AI pair programmer reads this automatically) |
+| `docs/ROADMAP.md` | **The master project roadmap**: phased plan with exit criteria, devnet → mainnet |
+| `CHANGELOG.md` | Every change, documented in the same commit that makes it |
 | `docs/LEARNING-ROADMAP.md` | Your step-by-step path from beginner to senior blockchain dev |
 | `docs/TOKENOMICS.md` | Draft token design: supply, charity fee, wallets |
 | `docs/SECURITY-CHECKLIST.md` | The list that keeps you from getting rekt |
 | `docs/LEGAL-NOTES.md` | Naming status + EU/MiCA notes (talk to a real lawyer!) |
 | `docs/COMPLIANCE-EU.md` | MiCA workstream: entity, white paper, marketing rules — the EU launch agenda |
 | `docs/TRANSPARENCY.md` | Monthly charity transparency report template |
+| `docs/DEVNET-LOG.md` | Log of devnet runs: addresses + tx links (transparency-report practice) |
 | `scripts/` | Small TypeScript scripts, numbered in the order you run them |
+| `tests/` | Test suite: the non-devnet interlock and the charity-fee math |
 | `keys/` | Local wallets for **devnet only** — git-ignored, never commit keys |
 
 ## Quickstart (devnet — free play money)
@@ -52,7 +56,8 @@ npm install
 # 2. Create a devnet wallet and get free test SOL
 npm run wallet
 
-# 3. Create the $PHOCA token (Token-2022 with a built-in transfer fee for charity)
+# 3. Create the $PHOCA token (Token-2022: built-in charity transfer fee AND
+#    on-chain metadata — the mint itself carries name, symbol and logo link)
 npm run create-token
 
 # 4. Mint the total supply to your treasury wallet
@@ -66,7 +71,18 @@ npm run collect-fees
 ```
 
 Everything runs against **devnet** (Solana's free test network) by default.
-Mainnet is a deliberate, later decision — see the roadmap.
+Mainnet is a deliberate, later decision — see `docs/ROADMAP.md`.
+
+## Tests
+
+```bash
+npm test           # interlock + fee-math suites (no network needed)
+npm run typecheck  # TypeScript must be clean
+```
+
+The most important tests guard the **non-devnet interlock** — the code that
+refuses to run these scripts against real money. If those tests fail, stop and
+find out why before running anything else. CI runs both checks on every push.
 
 ## Security & compliance posture
 
