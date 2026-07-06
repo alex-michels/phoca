@@ -12,15 +12,18 @@
     "mint-supply": "tsx scripts/03-mint-supply.ts",
     "transfer-test": "tsx scripts/04-transfer-test.ts",
     "collect-fees": "tsx scripts/05-collect-fees.ts",
+    "test": "node --import=tsx --test \"tests/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "audit": "npm audit --omit=dev"
   },
   "dependencies": {
     "@solana/spl-token": "0.4.14",
+    "@solana/spl-token-metadata": "0.1.6",
     "@solana/web3.js": "1.98.4",
     "dotenv": "16.6.1"
   },
   "devDependencies": {
+    "@types/node": "24.13.2",
     "tsx": "4.23.0",
     "typescript": "5.9.3"
   }
