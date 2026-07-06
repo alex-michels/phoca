@@ -1,0 +1,27 @@
+{
+  "name": "phoca",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PHOCA ($PHOCA) — seal coin on Solana for seal lovers & seal rescue (devnet learning project)",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "wallet": "tsx scripts/01-create-wallet.ts",
+    "create-token": "tsx scripts/02-create-token.ts",
+    "mint-supply": "tsx scripts/03-mint-supply.ts",
+    "transfer-test": "tsx scripts/04-transfer-test.ts",
+    "collect-fees": "tsx scripts/05-collect-fees.ts",
+    "typecheck": "tsc --noEmit",
+    "audit": "npm audit --omit=dev"
+  },
+  "dependencies": {
+    "@solana/spl-token": "0.4.14",
+    "@solana/web3.js": "1.98.4",
+    "dotenv": "16.6.1"
+  },
+  "devDependencies": {
+    "tsx": "4.23.0",
+    "typescript": "5.9.3"
+  }
+}

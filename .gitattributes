@@ -1,0 +1,2 @@
+# Normalize line endings: store as LF in git, let editors do what they like locally.
+* text=auto

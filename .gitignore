@@ -1,0 +1,9 @@
+# NEVER commit secrets or wallets
+keys/
+*.json.key
+.env
+
+node_modules/
+dist/
+*.log
+.DS_Store

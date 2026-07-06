@@ -1,0 +1,88 @@
+/**
+ * STEP 4 — See the charity fee work with your own eyes.
+ *
+ * We send 1,000 $PHOCA to a fresh test wallet and watch the network hold back
+ * the fee automatically. This is the moment the whole project clicks: the
+ * charity cut is not a promise in a tweet — it's arithmetic the blockchain
+ * performs on every single transfer.
+ *
+ * Note the special function: transferCheckedWithFee. Token-2022 tokens with a
+ * fee REQUIRE it (or transferChecked) — a plain transfer would be rejected.
+ * We must also state the fee we expect; if it doesn't match the on-chain
+ * config exactly, the transfer fails. That protects users from silent fee
+ * changes mid-transaction.
+ */
+import { Keypair, PublicKey } from "@solana/web3.js";
+import {
+  TOKEN_2022_PROGRAM_ID,
+  getOrCreateAssociatedTokenAccount,
+  transferCheckedWithFee,
+  getMint,
+  getTransferFeeConfig,
+  calculateEpochFee,
+  getAccount,
+  getTransferFeeAmount,
+} from "@solana/spl-token";
+import * as fs from "fs";
+import { getConnection, loadWallet, MINT_PATH } from "./utils";
+
+const DECIMALS = 9;
+const SEND_AMOUNT = BigInt(1_000) * BigInt(10 ** DECIMALS); // 1,000 PHOCA
+
+async function main() {
+  const connection = getConnection();
+  const payer = loadWallet();
+
+  if (!fs.existsSync(MINT_PATH)) throw new Error("No mint found. Run `npm run create-token` first.");
+  const mint = new PublicKey(fs.readFileSync(MINT_PATH, "utf-8").trim());
+
+  // A throwaway recipient — imagine this is a seal fan buying their first PHOCA
+  const recipient = Keypair.generate();
+  console.log("Test recipient:", recipient.publicKey.toBase58());
+
+  const sourceAta = await getOrCreateAssociatedTokenAccount(
+    connection, payer, mint, payer.publicKey, false, undefined, undefined, TOKEN_2022_PROGRAM_ID
+  );
+  const destAta = await getOrCreateAssociatedTokenAccount(
+    connection, payer, mint, recipient.publicKey, false, undefined, undefined, TOKEN_2022_PROGRAM_ID
+  );
+
+  // Read the fee rule straight from the blockchain (never trust hardcoded values)
+  const mintInfo = await getMint(connection, mint, undefined, TOKEN_2022_PROGRAM_ID);
+  const feeConfig = getTransferFeeConfig(mintInfo);
+  if (!feeConfig) throw new Error("This mint has no transfer fee config?!");
+
+  const epoch = BigInt((await connection.getEpochInfo()).epoch);
+  const expectedFee = calculateEpochFee(feeConfig, epoch, SEND_AMOUNT);
+
+  console.log(`Sending ${SEND_AMOUNT / BigInt(10 ** DECIMALS)} PHOCA...`);
+  console.log(`Expected charity fee: ${Number(expectedFee) / 10 ** DECIMALS} PHOCA`);
+
+  const sig = await transferCheckedWithFee(
+    connection,
+    payer,
+    sourceAta.address,
+    mint,
+    destAta.address,
+    payer, // owner of the source account
+    SEND_AMOUNT,
+    DECIMALS,
+    expectedFee,
+    [],
+    undefined,
+    TOKEN_2022_PROGRAM_ID
+  );
+
+  // Now inspect the recipient's account: the fee sits there as "withheld",
+  // untouchable by the recipient — only the withdraw authority can collect it.
+  const destAccount = await getAccount(connection, destAta.address, undefined, TOKEN_2022_PROGRAM_ID);
+  const withheld = getTransferFeeAmount(destAccount)?.withheldAmount ?? BigInt(0);
+
+  console.log("✅ Transfer done!");
+  console.log(`Recipient received: ${Number(destAccount.amount) / 10 ** DECIMALS} PHOCA`);
+  console.log(`Withheld for charity on this account: ${Number(withheld) / 10 ** DECIMALS} PHOCA`);
+  console.log("Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+  console.log("\nNext: `npm run collect-fees` to sweep withheld fees into the charity treasury.");
+}
+
+main().catch(console.error);
