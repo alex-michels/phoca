@@ -8,7 +8,10 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+- CLAUDE.md hard rule 9: every change goes through a pull request — branch,
+  PR with CHANGELOG entry, CI green, owner review before merge. No direct
+  commits to main. (This rule itself arrived via the first PR.)
 
 ## 2026-07-06 — Devnet initialization + fee-sweep hardening
 

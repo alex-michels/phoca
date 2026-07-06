@@ -47,6 +47,10 @@ as the owner's textbook.
 8. Documentation stays true: every change or deletion gets a CHANGELOG.md
    entry, and any doc the change invalidates (README, docs/*) is updated in
    the SAME commit. No orphaned docs, no undocumented changes.
+9. Every change goes through a pull request — work on a branch, open a PR
+   (CHANGELOG entry included), let CI pass, merge only after the owner's
+   review. No direct commits to main. ("Every line that moves value gets a
+   second pair of eyes" — SECURITY-CHECKLIST §4 — starts as a habit here.)
 
 ## Style
 - Small, numbered, single-purpose scripts in `scripts/`
