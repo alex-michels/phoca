@@ -38,11 +38,15 @@ export function getConnection(): Connection {
   return new Connection(url, "confirmed");
 }
 
-/** Load the wallet created by 01-create-wallet.ts */
-export function loadWallet(): Keypair {
-  if (!fs.existsSync(WALLET_PATH)) {
+/**
+ * Load the wallet created by 01-create-wallet.ts.
+ * The path parameter exists so tests can point at a temporary file —
+ * every real script simply calls loadWallet() and gets the default.
+ */
+export function loadWallet(walletPath: string = WALLET_PATH): Keypair {
+  if (!fs.existsSync(walletPath)) {
     throw new Error("No wallet found. Run `npm run wallet` first.");
   }
-  const secret = Uint8Array.from(JSON.parse(fs.readFileSync(WALLET_PATH, "utf-8")));
+  const secret = Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")));
   return Keypair.fromSecretKey(secret);
 }
