@@ -15,7 +15,12 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { Keypair } from "@solana/web3.js";
-import { getConnection, loadWallet } from "../scripts/utils";
+import {
+  getConnection,
+  loadWallet,
+  readTokenAccounts,
+  recordTokenAccount,
+} from "../scripts/utils";
 
 describe("getConnection — the non-devnet interlock", () => {
   // Each test gets a clean environment; whatever was set before is restored
@@ -89,6 +94,42 @@ describe("getConnection — the non-devnet interlock", () => {
     process.env.I_UNDERSTAND_THIS_IS_NOT_DEVNET = "true";
     // No throw expected: the human has explicitly accepted responsibility.
     assert.match(getConnection().rpcEndpoint, /mainnet/);
+  });
+});
+
+describe("token account registry (feeds the fee sweep)", () => {
+  test("no registry file yet → empty list, no crash", () => {
+    const missing = path.join(os.tmpdir(), "phoca-no-registry-here.json");
+    assert.deepEqual(readTokenAccounts(missing), []);
+  });
+
+  test("records addresses, reads them back, and never duplicates", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-registry-"));
+    const registry = path.join(dir, "token-accounts.json");
+    try {
+      recordTokenAccount("SealAccountOne1111111111111111111111111111", registry);
+      recordTokenAccount("SealAccountTwo2222222222222222222222222222", registry);
+      // Recording the same account twice must NOT create a duplicate entry —
+      // otherwise the sweep would query (and count) it twice.
+      recordTokenAccount("SealAccountOne1111111111111111111111111111", registry);
+      assert.deepEqual(readTokenAccounts(registry), [
+        "SealAccountOne1111111111111111111111111111",
+        "SealAccountTwo2222222222222222222222222222",
+      ]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("creates the parent directory if it doesn't exist yet", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-registry-"));
+    const registry = path.join(dir, "deeper", "nested", "token-accounts.json");
+    try {
+      recordTokenAccount("SealAccountOne1111111111111111111111111111", registry);
+      assert.equal(readTokenAccounts(registry).length, 1);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

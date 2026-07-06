@@ -12,6 +12,7 @@ dotenv.config();
 export const KEYS_DIR = path.join(__dirname, "..", "keys");
 export const WALLET_PATH = path.join(KEYS_DIR, "devnet-wallet.json");
 export const MINT_PATH = path.join(KEYS_DIR, "mint-address.txt");
+export const TOKEN_ACCOUNTS_PATH = path.join(KEYS_DIR, "token-accounts.json");
 
 /**
  * Connect to Solana. Defaults to devnet (free test network).
@@ -36,6 +37,35 @@ export function getConnection(): Connection {
   }
   // "confirmed" = wait until the network has reasonably accepted our transaction
   return new Connection(url, "confirmed");
+}
+
+/**
+ * TOKEN ACCOUNT REGISTRY — why we keep our own list.
+ *
+ * Withheld charity fees sit on the RECIPIENTS' token accounts, so the sweep
+ * needs to know every account that ever received PHOCA. Asking the RPC to
+ * scan for them (getProgramAccounts / getTokenLargestAccounts) is expensive,
+ * and public RPCs disable or heavily rate-limit those calls. So we do what a
+ * production system does: remember addresses at the moment we touch them.
+ * The registry lives in keys/ (git-ignored, devnet-local state — same as the
+ * mint address). It stores only PUBLIC addresses, never keys.
+ */
+export function readTokenAccounts(registryPath: string = TOKEN_ACCOUNTS_PATH): string[] {
+  if (!fs.existsSync(registryPath)) return [];
+  return JSON.parse(fs.readFileSync(registryPath, "utf-8"));
+}
+
+/** Add a token account address to the registry (deduplicated). */
+export function recordTokenAccount(
+  address: string,
+  registryPath: string = TOKEN_ACCOUNTS_PATH
+): void {
+  const list = readTokenAccounts(registryPath);
+  if (!list.includes(address)) {
+    list.push(address);
+    fs.mkdirSync(path.dirname(registryPath), { recursive: true });
+    fs.writeFileSync(registryPath, JSON.stringify(list, null, 2));
+  }
 }
 
 /**

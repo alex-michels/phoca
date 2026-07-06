@@ -10,6 +10,27 @@ rather than versioned until the first tagged release.
 
 _Nothing yet._
 
+## 2026-07-06 — Devnet initialization + fee-sweep hardening
+
+### Added
+- **PHOCA initialized on devnet, end to end**: mint
+  `BjEPXiw8jKMdRAxyhoVdcszHGCfWXaBSANqXhzzw6bux` created with fee + metadata
+  extensions, 1B supply minted, two fee-visible transfers (2×20 PHOCA
+  withheld), 40 PHOCA swept to treasury. Every tx logged in
+  docs/DEVNET-LOG.md.
+- **Token-account registry** (`scripts/utils.ts`): `recordTokenAccount` /
+  `readTokenAccounts` — the transfer script records every account it
+  touches (keys/token-accounts.json, git-ignored, public addresses only);
+  the fee sweep reads the registry instead of scanning the chain. Three new
+  registry tests (22 total).
+
+### Fixed
+- `scripts/05-collect-fees.ts` no longer relies on `getProgramAccounts`,
+  which public RPCs disable for Token-2022 (and their holder-scan
+  alternative is heavily rate-limited). Sweep now uses the local registry
+  with cheap per-account lookups; RPC holder scan remains only as a
+  fallback. Closed/nonexistent accounts are skipped gracefully.
+
 ## 2026-07-06 — Token identity, tests, governance, roadmap
 
 ### Added

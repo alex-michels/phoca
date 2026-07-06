@@ -15,11 +15,11 @@ import {
   TOKEN_2022_PROGRAM_ID,
   getOrCreateAssociatedTokenAccount,
   withdrawWithheldTokensFromAccounts,
-  unpackAccount,
+  getAccount,
   getTransferFeeAmount,
 } from "@solana/spl-token";
 import * as fs from "fs";
-import { getConnection, loadWallet, MINT_PATH } from "./utils";
+import { getConnection, loadWallet, readTokenAccounts, MINT_PATH } from "./utils";
 
 const DECIMALS = 9;
 
@@ -30,22 +30,34 @@ async function main() {
   if (!fs.existsSync(MINT_PATH)) throw new Error("No mint found. Run `npm run create-token` first.");
   const mint = new PublicKey(fs.readFileSync(MINT_PATH, "utf-8").trim());
 
-  // Find every token account of this mint (offset 0 = where the mint address
-  // lives inside a token account's raw data)
-  const allAccounts = await connection.getProgramAccounts(TOKEN_2022_PROGRAM_ID, {
-    commitment: "confirmed",
-    filters: [{ memcmp: { offset: 0, bytes: mint.toBase58() } }],
-  });
+  // HOW WE FIND THE FEE CRUMBS — and why not the "obvious" way:
+  // Scanning ALL accounts of the Token-2022 program (getProgramAccounts) is
+  // disabled on public RPCs, and even "top holders" scans are heavily
+  // rate-limited. So the transfer script RECORDS every account it touches in
+  // a local registry (see utils.ts), and we just check those with cheap
+  // per-account lookups. The RPC scan remains only as a fallback for when
+  // the registry doesn't exist yet. On mainnet, with thousands of holders,
+  // this becomes an indexer service (planned in docs/ROADMAP.md Phase 2).
+  let candidates: PublicKey[] = readTokenAccounts().map((a) => new PublicKey(a));
+  if (candidates.length === 0) {
+    console.log("No local registry found — falling back to an RPC holder scan...");
+    const largest = await connection.getTokenLargestAccounts(mint, "confirmed");
+    candidates = largest.value.map((v) => v.address);
+  }
 
   const accountsWithFees: PublicKey[] = [];
   let totalWithheld = BigInt(0);
 
-  for (const { pubkey, account } of allAccounts) {
-    const parsed = unpackAccount(pubkey, account, TOKEN_2022_PROGRAM_ID);
-    const withheld = getTransferFeeAmount(parsed)?.withheldAmount ?? BigInt(0);
-    if (withheld > BigInt(0)) {
-      accountsWithFees.push(pubkey);
-      totalWithheld += withheld;
+  for (const address of candidates) {
+    try {
+      const parsed = await getAccount(connection, address, "confirmed", TOKEN_2022_PROGRAM_ID);
+      const withheld = getTransferFeeAmount(parsed)?.withheldAmount ?? BigInt(0);
+      if (withheld > BigInt(0)) {
+        accountsWithFees.push(address);
+        totalWithheld += withheld;
+      }
+    } catch {
+      // Account closed or never created — nothing to sweep there, skip it.
     }
   }
 

@@ -24,7 +24,7 @@ import {
   getTransferFeeAmount,
 } from "@solana/spl-token";
 import * as fs from "fs";
-import { getConnection, loadWallet, MINT_PATH } from "./utils";
+import { getConnection, loadWallet, recordTokenAccount, MINT_PATH } from "./utils";
 
 const DECIMALS = 9;
 const SEND_AMOUNT = BigInt(1_000) * BigInt(10 ** DECIMALS); // 1,000 PHOCA
@@ -46,6 +46,11 @@ async function main() {
   const destAta = await getOrCreateAssociatedTokenAccount(
     connection, payer, mint, recipient.publicKey, false, undefined, undefined, TOKEN_2022_PROGRAM_ID
   );
+
+  // Remember both accounts so `npm run collect-fees` can find the withheld
+  // fees WITHOUT expensive RPC scan calls (see the registry note in utils.ts).
+  recordTokenAccount(sourceAta.address.toBase58());
+  recordTokenAccount(destAta.address.toBase58());
 
   // Read the fee rule straight from the blockchain (never trust hardcoded values)
   const mintInfo = await getMint(connection, mint, undefined, TOKEN_2022_PROGRAM_ID);

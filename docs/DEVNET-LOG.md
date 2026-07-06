@@ -13,13 +13,44 @@ paste private keys anywhere — only public addresses and tx signatures.
 | What | Value |
 |---|---|
 | Wallet / treasury (devnet) | `vTzQs4bv1q2SMaktFGAh2v4wTNnepeoE31Shdp4Kt5G` |
-| Mint address | — not created yet |
+| Mint address | `BjEPXiw8jKMdRAxyhoVdcszHGCfWXaBSANqXhzzw6bux` |
+| Treasury token account (ATA) | `7wiVJZcCeBVEF9FCNHoUmQin95Kvoe1QtHkYTvWB5nSj` |
 | Token | PHOCA / PHOCA, 9 decimals, 2% fee (cap 5,000), metadata in-mint |
+| Supply | 1,000,000,000 PHOCA minted to treasury |
+
+Explorer (devnet): https://explorer.solana.com/address/BjEPXiw8jKMdRAxyhoVdcszHGCfWXaBSANqXhzzw6bux?cluster=devnet
 
 ## Runs
 
-### 2026-07-06 — wallet created
-- `npm run wallet` → new devnet wallet `vTzQs4bv1q2SMaktFGAh2v4wTNnepeoE31Shdp4Kt5G`
-- Airdrop: **pending** — public faucet rate-limited (429). Next: fund via
-  https://faucet.solana.com, then run `create-token` → `mint-supply` →
-  `transfer-test` ×2 → `collect-fees` and log every tx below.
+### 2026-07-06 — full initialization
+
+1. **Wallet created** — `npm run wallet` →
+   `vTzQs4bv1q2SMaktFGAh2v4wTNnepeoE31Shdp4Kt5G`. Public faucet rate-limited
+   (429); funded manually with 2.5 SOL via https://faucet.solana.com.
+2. **Token created** (transfer-fee + metadata extensions, one tx) —
+   `npm run create-token` → mint `BjEPXiw8jKMdRAxyhoVdcszHGCfWXaBSANqXhzzw6bux`
+   — [tx 34KYhYRw…](https://explorer.solana.com/tx/34KYhYRwUuYDwMeRJiNpECUZHTWRPBKxjqtBVW4w3vuk8dM92NRHBaHgWssZQbMxmVQK9ne13z1YpWPTCrPE6jza?cluster=devnet)
+3. **Supply minted** — `npm run mint-supply` → 1,000,000,000 PHOCA to treasury ATA
+   `7wiVJZcCeBVEF9FCNHoUmQin95Kvoe1QtHkYTvWB5nSj`
+   — [tx y45iq7Wa…](https://explorer.solana.com/tx/y45iq7Wa7GkF7WD9sc8AQ2YdQ1nrbSnh6tmMWjBztsExitJBZyan2K6CcWcKEFUVqabHqbnZhBvktF9oh3Ap3ev?cluster=devnet)
+4. **Transfer test #1** — 1,000 PHOCA → `4KHT6j3arkQDnVJajirrTj7S7yYpuo2yC3R9uMz6w5RJ`:
+   recipient got 980, chain withheld 20 for charity
+   — [tx 5J4D95PC…](https://explorer.solana.com/tx/5J4D95PC6AQnzoarG4zTAoYjhu16wMAsKEmHHBv4Qu882AAQPXMJJRHa5cyQp9puSXRfYnuZ9HJDJZS36wYcj4VV?cluster=devnet)
+5. **Transfer test #2** — 1,000 PHOCA → `2TYSJ89h8UbaJoFyjjCHq85a5z4zsnN5Hp25qSDLW1Up`:
+   980 received / 20 withheld
+   — [tx 3hTnGSuH…](https://explorer.solana.com/tx/3hTnGSuHp6bEioAs5RkNYUeydvSn6oAiDaPQuM1XDc5eZ3PmYoFfQoJAHmwv8XvHgFiFbjMGhLWaERukA94xZ5jZ?cluster=devnet)
+6. **Fee sweep** — hit a real-world wall first: the public devnet RPC has
+   `getProgramAccounts` DISABLED for Token-2022, and even the "top holders"
+   scan is heavily rate-limited (429). Proper fix: the transfer script now
+   RECORDS every token account it touches in a local registry
+   (`keys/token-accounts.json`, git-ignored, public addresses only), and the
+   sweep reads the registry with cheap per-account lookups — RPC scans are
+   only a fallback. Registry seeded for the two pre-fix recipients by
+   deriving their ATAs offline. Then:
+   **40 PHOCA collected into the treasury**
+   — [tx 4p9W47U8…](https://explorer.solana.com/tx/4p9W47U8CY8fnwLcRHX9XrrTLKrpNCjVLCyAzyfAtzjSgSfADzXho6dGp2ChVNEuZZWUsoF8dFM52cvatdjqqyJH?cluster=devnet)
+
+**Lessons of the day:** (1) public RPCs restrict expensive scan calls —
+design for the RPC you'll actually have, keep your own account registry;
+(2) the fee arithmetic worked exactly as the test suite predicted: 2% of
+1,000 = 20 PHOCA per transfer, withheld by the chain itself, 40 swept.

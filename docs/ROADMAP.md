@@ -26,7 +26,7 @@ whatever phase is active.
 | Test suite: non-devnet interlock + fee math (`npm test`) | ✅ |
 | CI on every push: `npm ci` → typecheck → tests → audit report | ✅ |
 | Docs governance: CHANGELOG + same-commit doc updates (CLAUDE.md rule 8) | ✅ |
-| End-to-end devnet run recorded in docs/DEVNET-LOG.md | ⬜ (faucet) |
+| End-to-end devnet run recorded in docs/DEVNET-LOG.md | ✅ 2026-07-06 |
 
 **Exit criteria:** fresh clone → `npm ci` → all scripts run end-to-end on
 devnet → explorer shows PHOCA with fee + metadata extensions → CI green →
