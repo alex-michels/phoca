@@ -87,10 +87,10 @@ Lesson: an audit finding is the START of a decision, not a command.
 - [ ] History verified clean at go-public: `keys/`, `.env` and secret-like
       byte arrays never appeared in any commit (checked 2026-07-12). Re-run
       the same scan before any future visibility change of any repo.
-- [ ] LICENSE decision pending — a public repo without a license is
-      "all rights reserved", which contradicts build-in-public trust. Owner
-      to choose (MIT recommended for the scripts; brand/logo can be excluded
-      explicitly).
+- [x] LICENSE decided (2026-07-12): MIT for code and docs; PHOCA name, logo
+      and brand assets explicitly excluded (all rights reserved) to keep
+      scam tokens from wearing our seal — see README "License". Brand rights
+      move to the legal entity in Phase 4.
 - [ ] Public repo = public recon: issues/PRs/discussions will attract
       scammers offering "listings" and "marketing" (§1 rule applies), and
       the devnet addresses in docs/ are intentionally public (worthless).

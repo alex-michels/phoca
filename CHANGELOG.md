@@ -8,6 +8,12 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (license)
+- MIT LICENSE for code and documentation (`license: "MIT"` in package.json);
+  README "License" section carves out the PHOCA name, logo and brand assets
+  (all rights reserved — anti-scam measure, rights move to the legal entity
+  in Phase 4). SECURITY-CHECKLIST §9 license item checked off.
+
 ### Added (public-repo security hardening, 2026-07-12)
 - `SECURITY.md` — security policy for the now-public repo: scope (devnet
   only, no custom on-chain code, keys never in history), private

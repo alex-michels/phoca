@@ -92,6 +92,14 @@ exact-pinned with a committed lockfile; known advisories are triaged in
 `docs/COMPLIANCE-EU.md` — devnet learning needs none of it, a public EU offer
 needs all of it plus a lawyer.
 
+## License
+
+Code and documentation are released under the [MIT License](LICENSE) — learn
+from it, fork it, build on it. **Exception:** the PHOCA name, logo and brand
+assets (`assets/phoca-logo*.svg`, `assets/phoca-metadata.json` imagery) are
+NOT MIT-licensed — all rights reserved, to prevent scam tokens wearing our
+seal. Brand rights move to the project's legal entity in ROADMAP Phase 4.
+
 ## The core idea in one paragraph
 
 We use Solana's **Token-2022** standard with the **Transfer Fee extension**. That means the
