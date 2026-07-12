@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img">
+  <title>PHOCA — seal coin logo</title>
+  <desc>A round gold coin, a nod to the ancient coins of Phocaea, holding a smiling round gray seal face centered on an ocean-blue disc.</desc>
+
+  <!-- Coin: electrum-gold ring (Phocaea minted electrum coins ~600 BC) -->
+  <circle cx="256" cy="256" r="252" fill="#D9A93F"/>
+  <circle cx="256" cy="256" r="244" fill="#EEC569"/>
+  <circle cx="256" cy="256" r="224" fill="#2E7DB2"/>
+
+  <!-- Seal head, centered on the coin -->
+  <circle cx="256" cy="256" r="166" fill="#B9C6D2"/>
+  <!-- soft top highlight -->
+  <ellipse cx="216" cy="148" rx="64" ry="30" fill="#CBD6E0" opacity="0.8"/>
+
+  <!-- Muzzle -->
+  <ellipse cx="256" cy="306" rx="96" ry="68" fill="#EAF1F6"/>
+
+  <!-- Blush -->
+  <ellipse cx="146" cy="292" rx="22" ry="13" fill="#F2A9A3" opacity="0.55"/>
+  <ellipse cx="366" cy="292" rx="22" ry="13" fill="#F2A9A3" opacity="0.55"/>
+
+  <!-- Eyes: big, dark, glossy -->
+  <circle cx="194" cy="226" r="27" fill="#22303C"/>
+  <circle cx="318" cy="226" r="27" fill="#22303C"/>
+  <circle cx="203" cy="216" r="9" fill="#FFFFFF"/>
+  <circle cx="327" cy="216" r="9" fill="#FFFFFF"/>
+  <circle cx="186" cy="234" r="4" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="310" cy="234" r="4" fill="#FFFFFF" opacity="0.7"/>
+
+  <!-- Nose -->
+  <path d="M234 276 Q256 266 278 276 Q278 296 256 304 Q234 296 234 276 Z" fill="#33424F"/>
+
+  <!-- Mouth: a wide, happy smile — dips down then turns UP at the corners -->
+  <path d="M256 304 L256 314" fill="none" stroke="#33424F" stroke-width="7" stroke-linecap="round"/>
+  <path d="M256 314 Q248 340 214 316" fill="none" stroke="#33424F" stroke-width="7" stroke-linecap="round"/>
+  <path d="M256 314 Q264 340 298 316" fill="none" stroke="#33424F" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Whisker dots -->
+  <circle cx="196" cy="306" r="4" fill="#9FB2C0"/>
+  <circle cx="184" cy="322" r="4" fill="#9FB2C0"/>
+  <circle cx="200" cy="336" r="4" fill="#9FB2C0"/>
+  <circle cx="316" cy="306" r="4" fill="#9FB2C0"/>
+  <circle cx="328" cy="322" r="4" fill="#9FB2C0"/>
+  <circle cx="312" cy="336" r="4" fill="#9FB2C0"/>
+
+  <!-- Whiskers -->
+  <path d="M172 304 Q128 294 96 302" fill="none" stroke="#8FA3B3" stroke-width="4" stroke-linecap="round"/>
+  <path d="M166 322 Q122 322 92 332" fill="none" stroke="#8FA3B3" stroke-width="4" stroke-linecap="round"/>
+  <path d="M340 304 Q384 294 416 302" fill="none" stroke="#8FA3B3" stroke-width="4" stroke-linecap="round"/>
+  <path d="M346 322 Q390 322 420 332" fill="none" stroke="#8FA3B3" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -36,8 +36,11 @@ every artifact logged in DEVNET-LOG.md.
 
 **Goal:** PHOCA looks and reads like a real project (still devnet).
 
-- [ ] Final logo (`assets/phoca-logo.png`, owner-provided) + square 512×512
-      version for wallets/explorers; update `assets/phoca-metadata.json`
+- [ ] Final logo: gold engraved seal-coin chosen as PRIMARY after small-size
+      UX review (2026-07-12, `assets/phoca-logo.svg`; blue variant kept as
+      `assets/phoca-logo-blue.svg` secondary). Metadata points to it — repo
+      is public, URI resolves. Remaining: owner final sign-off + a 512×512
+      PNG export for wallets that don't render SVG
 - [x] Brand story page copy → docs/BRAND-STORY.md (2026-07-12): the Phocaea
       hook, wording pre-checked against COMPLIANCE-EU Phase C rules; final
       legal review before publication stays a Phase 4 gate

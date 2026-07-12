@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img">
+  <title>PHOCA — seal coin logo</title>
+  <desc>A gold coin in the spirit of ancient Phocaea: a smiling seal face engraved in dark bronze strokes on flat gold, with a beaded rim. Three whiskers and two thinner supraorbital (eyebrow) vibrissae per side — like a real seal.</desc>
+
+  <!-- Coin: flat electrum gold (Phocaea minted electrum ~600 BC), beaded rim like ancient coinage -->
+  <circle cx="256" cy="256" r="252" fill="#B8860B"/>
+  <circle cx="256" cy="256" r="244" fill="#EDC45F"/>
+  <!-- flat mint-shine arc, top-left; melts away at icon sizes -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#F7DC85" stroke-width="12" stroke-dasharray="220 1100" stroke-linecap="round" transform="rotate(-160 256 256)" opacity="0.8"/>
+  <!-- beaded rim: dots via round dashes -->
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#8A6510" stroke-width="9" stroke-dasharray="0.1 36" stroke-linecap="round"/>
+
+  <!-- Engraved seal face: near-black bronze on gold for small-size contrast -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#3A2905" stroke-width="13"/>
+
+  <!-- Eyes: solid (the recognizability anchor at 32px), highlights "punched" in background gold -->
+  <circle cx="194" cy="226" r="28" fill="#3A2905"/>
+  <circle cx="318" cy="226" r="28" fill="#3A2905"/>
+  <circle cx="203" cy="216" r="8" fill="#EDC45F"/>
+  <circle cx="327" cy="216" r="8" fill="#EDC45F"/>
+  <circle cx="187" cy="234" r="4" fill="#EDC45F" opacity="0.8"/>
+  <circle cx="311" cy="234" r="4" fill="#EDC45F" opacity="0.8"/>
+
+  <!-- Supraorbital (eyebrow) vibrissae — real seals have them; thinner than the whiskers -->
+  <path d="M176 190 Q162 176 152 162" fill="none" stroke="#5C4408" stroke-width="6" stroke-linecap="round"/>
+  <path d="M198 184 Q194 166 190 152" fill="none" stroke="#5C4408" stroke-width="6" stroke-linecap="round"/>
+  <path d="M336 190 Q350 176 360 162" fill="none" stroke="#5C4408" stroke-width="6" stroke-linecap="round"/>
+  <path d="M314 184 Q318 166 322 152" fill="none" stroke="#5C4408" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <path d="M238 272 Q256 264 274 272 Q274 288 256 296 Q238 288 238 272 Z" fill="#3A2905"/>
+
+  <!-- Mouth: a wide happy smile — dips down, corners turn UP -->
+  <path d="M256 296 L256 308" fill="none" stroke="#3A2905" stroke-width="11" stroke-linecap="round"/>
+  <path d="M256 308 Q248 332 216 310" fill="none" stroke="#3A2905" stroke-width="11" stroke-linecap="round"/>
+  <path d="M256 308 Q264 332 296 310" fill="none" stroke="#3A2905" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- Whisker dots -->
+  <circle cx="204" cy="296" r="6" fill="#3A2905"/>
+  <circle cx="192" cy="312" r="6" fill="#3A2905"/>
+  <circle cx="208" cy="326" r="6" fill="#3A2905"/>
+  <circle cx="308" cy="296" r="6" fill="#3A2905"/>
+  <circle cx="320" cy="312" r="6" fill="#3A2905"/>
+  <circle cx="304" cy="326" r="6" fill="#3A2905"/>
+
+  <!-- Whiskers: three per side, thick enough to survive 48px wallet lists -->
+  <path d="M180 292 Q136 282 110 288" fill="none" stroke="#5C4408" stroke-width="11" stroke-linecap="round"/>
+  <path d="M178 308 Q132 306 106 312" fill="none" stroke="#5C4408" stroke-width="11" stroke-linecap="round"/>
+  <path d="M182 324 Q140 328 114 338" fill="none" stroke="#5C4408" stroke-width="11" stroke-linecap="round"/>
+  <path d="M332 292 Q376 282 402 288" fill="none" stroke="#5C4408" stroke-width="11" stroke-linecap="round"/>
+  <path d="M334 308 Q380 306 406 312" fill="none" stroke="#5C4408" stroke-width="11" stroke-linecap="round"/>
+  <path d="M330 324 Q372 328 398 338" fill="none" stroke="#5C4408" stroke-width="11" stroke-linecap="round"/>
+</svg>
