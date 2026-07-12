@@ -1,19 +1,35 @@
 # ⚖️ Legal notes (I am not a lawyer — get a real one before any public sale)
 
-## 1. Naming status: PHOCA ✅ (checked July 2026 — re-check on launch day)
-Web research in July 2026 found **no active crypto project named PHOCA** — no
-CoinGecko/CoinMarketCap listing, no news, no community footprint. Findings:
-- One unnamed micro-token at an ETH contract surfaced on an aggregator page with
-  zero search footprint — the profile of a dead token; dead tokens don't reserve
-  names and create no market confusion or legal rights. Verify its liquidity /
-  volume / holders once more before announcing.
-- Unrelated namesakes in other fields: phoca.cz (Czech Joomla CMS extensions —
-  check EUIPO whether they hold software-class trademarks) and Phoca as the
-  biological genus of true seals. A dictionary/scientific word can't be
-  monopolized outright — protect the logo + "PHOCA + seal" combination instead.
-- Launch-day checklist: search PHOCA on dexscreener.com, coingecko.com,
-  coinmarketcap.com, birdeye.so; secure @phoca-style handles on X/Telegram and
-  domains BEFORE any public mention.
+## 1. Naming status: PHOCA ✅ (re-checked 2026-07-12 — re-check again on launch day)
+
+**2026-07-12 re-check — clean, with hard evidence.** Queried the trackers'
+public APIs directly, not just web search:
+- **DEX Screener search API** (`/latest/dex/search?q=PHOCA`): **zero trading
+  pairs**, across all chains it indexes.
+- **CoinGecko search API** (`/api/v3/search?query=phoca`): **zero results** in
+  coins, exchanges, categories and NFTs.
+- General web search: no crypto project, no announcements, no community
+  footprint under the name.
+- The unnamed dead ETH micro-token noted in the 2026-07-06 check no longer
+  surfaces anywhere — treat as gone.
+- **phoca.cz remains active** (Czech Joomla/WordPress CMS extensions,
+  releases as recent as July 2026) — no crypto or finance connection;
+  different field, classic trademark coexistence scenario. Still: the EUIPO
+  question below stays open.
+- **EUIPO/TMview word-mark search cannot be done reliably by web search** —
+  it needs a manual database query (classes of interest: 9 software,
+  36 financial services, 42 software services). This is on the Phase 4
+  counsel agenda (docs/ROADMAP.md) and must happen before trademark filing
+  or any public offer.
+
+Earlier findings (2026-07-06) for the record: no CoinGecko/CMC listing, no
+news; namesakes are phoca.cz and the biological genus itself. A
+dictionary/scientific word can't be monopolized outright — protect the logo +
+"PHOCA + seal" combination instead.
+
+Launch-day checklist (unchanged): re-run the two API queries above, plus
+coinmarketcap.com and birdeye.so by hand; secure @phoca-style handles on
+X/Telegram and domains BEFORE any public mention.
 
 Historical note for the white paper: the ancient city of Phocaea minted some of
 the world's earliest coins (~600 BC) bearing a seal as its civic badge — a

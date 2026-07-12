@@ -8,6 +8,20 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (Phase 1 — identity & content)
+- `docs/BRAND-STORY.md` — publication-ready brand copy (the Phocaea story,
+  what PHOCA is / is not, charity mechanism as implemented, devnet status),
+  written to COMPLIANCE-EU Phase C rules: no profit language, verifiable
+  claims only, risk statement included. Final legal review remains a
+  Phase 4 gate.
+- LEGAL-NOTES §1 naming re-check (2026-07-12) with hard evidence: DEX
+  Screener and CoinGecko public search APIs both return **zero** PHOCA
+  results; the dead ETH micro-token from the earlier check no longer
+  surfaces; phoca.cz confirmed active and unrelated (CMS software). EUIPO/
+  TMview manual trademark query flagged for the Phase 4 counsel agenda.
+- ROADMAP Phase 1: brand story + name re-check marked done (logo and
+  charity focus list remain).
+
 ### Fixed (2026-07 code review)
 - **Interlock hardened**: the safety check now parses the RPC URL and looks
   only at the hostname — `https://mainnet-rpc.example.com/?key=devnet` and

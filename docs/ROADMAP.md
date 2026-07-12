@@ -38,11 +38,12 @@ every artifact logged in DEVNET-LOG.md.
 
 - [ ] Final logo (`assets/phoca-logo.png`, owner-provided) + square 512×512
       version for wallets/explorers; update `assets/phoca-metadata.json`
-- [ ] Brand story page copy: the Phocaea hook (first seal coin ~600 BC →
-      the next one is for the seals) — wording pre-checked against
-      COMPLIANCE-EU Phase C rules
-- [ ] Name-collision re-check (DEX Screener / CoinGecko / Birdeye / EUIPO
-      trademark search) — refresh docs/LEGAL-NOTES.md 🔎
+- [x] Brand story page copy → docs/BRAND-STORY.md (2026-07-12): the Phocaea
+      hook, wording pre-checked against COMPLIANCE-EU Phase C rules; final
+      legal review before publication stays a Phase 4 gate
+- [x] Name-collision re-check (2026-07-12): DEX Screener + CoinGecko APIs
+      returned zero PHOCA results; LEGAL-NOTES.md refreshed. EUIPO/TMview
+      manual query stays on the Phase 4 counsel agenda 🔎
 - [ ] Decide charity focus list (seal rescue centers, research orgs) — NO
       public naming yet, that needs written agreements (TOKENOMICS trust rule 3)
 
