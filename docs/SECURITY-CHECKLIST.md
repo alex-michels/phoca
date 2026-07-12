@@ -67,3 +67,30 @@
   to the modern `@solana/kit` (web3.js v2) stack where this dependency tree
   is gone. Track this as a real backlog item, not a someday-wish.
 Lesson: an audit finding is the START of a decision, not a command.
+
+## 9. Public repository posture (repo went public 2026-07-12)
+- [ ] **Secret scanning ON + push protection ON** (Settings → Advanced
+      Security): free for public repos; push protection blocks a leaked
+      token BEFORE it lands in history. This is the single most important
+      switch for a public money-adjacent repo.
+- [ ] **Dependabot alerts ON** (Settings → Advanced Security): we pin exact
+      versions on purpose, so auto-update PRs stay OFF — but we want to be
+      TOLD when a pinned version gets a CVE. Alerts, not auto-fixes.
+- [ ] **Private vulnerability reporting ON** (Settings → Advanced Security)
+      — SECURITY.md points researchers there.
+- [ ] Branch protection on `main`: PRs required (done 2026-07-12), and add
+      the CI check `checks` to required status checks so red CI physically
+      cannot merge, even with the admin bypass.
+- [ ] CI workflow runs with `permissions: contents: read` (explicit least
+      privilege, done 2026-07-12); repo default workflow token is read-only
+      with PR-approval disabled — keep it that way.
+- [ ] History verified clean at go-public: `keys/`, `.env` and secret-like
+      byte arrays never appeared in any commit (checked 2026-07-12). Re-run
+      the same scan before any future visibility change of any repo.
+- [ ] LICENSE decision pending — a public repo without a license is
+      "all rights reserved", which contradicts build-in-public trust. Owner
+      to choose (MIT recommended for the scripts; brand/logo can be excluded
+      explicitly).
+- [ ] Public repo = public recon: issues/PRs/discussions will attract
+      scammers offering "listings" and "marketing" (§1 rule applies), and
+      the devnet addresses in docs/ are intentionally public (worthless).

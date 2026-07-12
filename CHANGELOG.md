@@ -8,6 +8,20 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (public-repo security hardening, 2026-07-12)
+- `SECURITY.md` — security policy for the now-public repo: scope (devnet
+  only, no custom on-chain code, keys never in history), private
+  vulnerability reporting as the disclosure channel, scam warning.
+- SECURITY-CHECKLIST §9 — public repository posture: secret scanning +
+  push protection, Dependabot alerts (alerts-only, pins stay manual),
+  private vulnerability reporting, CI check as required status check,
+  history-scan-before-visibility-change rule, LICENSE decision (pending,
+  owner's call).
+- CI workflow now declares `permissions: contents: read` explicitly —
+  least privilege survives any future repo-default drift.
+- Git history audit at go-public: `keys/`, `.env`, and secret-like byte
+  arrays confirmed absent from every commit ever pushed.
+
 ### Added (Phase 1 — identity & content)
 - `assets/phoca-logo.svg` — PRIMARY icon, chosen after a small-size UX
   review: a flat electrum-gold coin (Phocaea minted electrum ~600 BC) with
