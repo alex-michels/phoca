@@ -44,25 +44,21 @@ import {
   TokenMetadata,
 } from "@solana/spl-token-metadata";
 import * as fs from "fs";
-import { getConnection, loadWallet, MINT_PATH } from "./utils";
-
-// ------- TOKEN SETTINGS — tweak these -------
-const DECIMALS = 9;                 // 1 token = 1_000_000_000 base units (like cents, but 10^9)
-const FEE_BASIS_POINTS = 200;       // 200 basis points = 2.00% fee per transfer
-const MAX_FEE = BigInt(5_000 * 10 ** DECIMALS); // fee is capped at 5,000 tokens per transfer
-
-const TOKEN_NAME = "PHOCA";
-const TOKEN_SYMBOL = "PHOCA";
-// Where wallets/explorers fetch the rich metadata (description, logo, links).
-// NOTE: the repo is private right now, so this URL won't resolve publicly yet —
-// that's fine on devnet. The update authority can change this URI any time;
-// for mainnet it must move to permanent hosting (Arweave/Irys), see docs/ROADMAP.md.
-const METADATA_URI =
-  "https://raw.githubusercontent.com/alex-michels/phoca/main/assets/phoca-metadata.json";
-// ---------------------------------------------
+import { getConnection, assertDevnet, loadWallet, MINT_PATH } from "./utils";
+// All token settings live in ONE place — change them there, never here:
+import {
+  DECIMALS,
+  FEE_BASIS_POINTS,
+  MAX_FEE,
+  TOKEN_NAME,
+  TOKEN_SYMBOL,
+  METADATA_URI,
+} from "./config";
 
 async function main() {
   const connection = getConnection();
+  // Verify the chain's fingerprint, not just its URL (see utils.ts)
+  await assertDevnet(connection);
   const payer = loadWallet();
 
   // The mint gets its own address (a fresh keypair used once, at creation)
@@ -89,6 +85,9 @@ async function main() {
   // - The metadata CONTENT is variable-size, so the account is created at the
   //   fixed size, but we pre-fund enough lamports ("rent") for the final size —
   //   the InitializeTokenMetadata instruction grows the account when it runs.
+  // - Heads-up for later: if the metadata ever GROWS (longer URI, extra
+  //   fields), the account needs a lamport top-up BEFORE the update
+  //   instruction — rent is paid for size, and we only pre-funded today's.
   const mintLen = getMintLen([
     ExtensionType.TransferFeeConfig,
     ExtensionType.MetadataPointer,

@@ -11,8 +11,11 @@ as the owner's textbook.
 
 ## Token identity (use these constants everywhere)
 - Name: PHOCA · Symbol: PHOCA · Chain: Solana
-- Standard: Token-2022 (Token Extensions) with the TransferFee extension
+- Standard: Token-2022 (Token Extensions) with the TransferFee extension and
+  on-chain metadata (MetadataPointer + TokenMetadata, stored in the mint)
 - Freeze authority: none, by design. Mint authority: to be revoked after supply mint.
+- All token parameters (supply, decimals, fee, name, URI) live in
+  scripts/config.ts — the single source of truth for scripts AND tests.
 
 ## Tech stack
 - TypeScript + Node.js, @solana/web3.js + @solana/spl-token (exact-pinned versions)

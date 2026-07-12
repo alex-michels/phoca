@@ -50,7 +50,7 @@ Earth — exactly the kind of animal this project exists to help.
 ## Quickstart (devnet — free play money)
 
 ```bash
-# 1. Install dependencies (needs Node.js 18+)
+# 1. Install dependencies (needs Node.js 22+ — the test runner uses modern flags)
 npm install
 
 # 2. Create a devnet wallet and get free test SOL

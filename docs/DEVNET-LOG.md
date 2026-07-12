@@ -54,3 +54,19 @@ Explorer (devnet): https://explorer.solana.com/address/BjEPXiw8jKMdRAxyhoVdcszHG
 design for the RPC you'll actually have, keep your own account registry;
 (2) the fee arithmetic worked exactly as the test suite predicted: 2% of
 1,000 = 20 PHOCA per transfer, withheld by the chain itself, 40 swept.
+
+### 2026-07-06 — verification run after the code-review fixes
+
+Purpose: prove the hardened scripts (hostname interlock + genesis-hash
+check + shared config + exact BigInt display + auto-recording registry)
+work against the real chain, not just in unit tests.
+
+1. **Transfer test** — 1,000 PHOCA → `2hT7jLFzanm8GE1nFta75hw5ucAFduXcvhS1MC83sTnH`:
+   980 received / 20 withheld; recipient auto-recorded in the registry
+   — [tx 3oKnq5UD…](https://explorer.solana.com/tx/3oKnq5UDBYhrSAAuyRCN2BquGwuPWvzUR5Q1MAsdmiAKUBWsJVSSoGs1g6QS8CVGQ2bCUKF1mYiKVApBDmkyTS1D?cluster=devnet)
+2. **Fee sweep** — found exactly the 1 new account, collected **20 PHOCA**
+   (lifetime total swept: 60 PHOCA)
+   — [tx 63TRRyTF…](https://explorer.solana.com/tx/63TRRyTFnCEXMBGapkVkFrdteFv5k2A8h2k9sBVih79e3XUCQAjPHGcxCLovRKGpCKUw4YijYmivEDYHCakiHqMC?cluster=devnet)
+
+Every script now verifies the cluster's genesis hash before signing anything —
+the URL can sound like devnet, the chain's fingerprint can't.

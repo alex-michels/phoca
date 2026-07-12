@@ -7,18 +7,17 @@
  *
  *   fee = ceil(amount × basis_points / 10_000), capped at maximumFee
  *
- * Pure math, no network. If the fee settings in 02-create-token.ts ever
- * change, the constants here must change with them (docs/TOKENOMICS.md too).
+ * Pure math, no network. The constants come from scripts/config.ts — the
+ * SAME values the scripts feed to the chain, so config and tests can never
+ * drift apart. The expected numbers below are written out by hand on
+ * purpose: if someone changes the fee in config, these tests fail loudly
+ * and force a conscious update (and a TOKENOMICS.md update — rule 8).
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { PublicKey } from "@solana/web3.js";
 import { calculateEpochFee, TransferFeeConfig } from "@solana/spl-token";
-
-const DECIMALS = 9;
-const ONE = 10n ** BigInt(DECIMALS); // 1 whole PHOCA in base units
-const FEE_BASIS_POINTS = 200;        // 2.00% — must match 02-create-token.ts
-const MAX_FEE = 5_000n * ONE;        // cap: 5,000 PHOCA per transfer
+import { FEE_BASIS_POINTS, MAX_FEE, ONE_PHOCA as ONE } from "../scripts/config";
 
 /** Build a synthetic on-chain fee config like the one our mint carries. */
 function feeConfig(
