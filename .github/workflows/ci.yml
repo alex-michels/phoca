@@ -9,6 +9,11 @@ on:
     branches: [main]
   pull_request:
 
+# Least privilege: this workflow only reads the repo. Explicit, so a future
+# change to the repo-level default can never silently widen what CI can do.
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
