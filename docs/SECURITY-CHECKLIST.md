@@ -17,6 +17,7 @@
 | Freeze | none (null at creation) | none | We can never freeze holders |
 | Transfer-fee config | dev wallet | Multisig | Fee may only go DOWN or stay; any change announced ≥7 days ahead in writing |
 | Withdraw withheld (charity) | dev wallet | Multisig | Sweeps on a published schedule; every sweep in the transparency report |
+| Metadata update (name/symbol/URI) | dev wallet | Multisig | URI on permanent hosting (Arweave/Irys) before launch; any change announced — a silent identity swap is a rug signal |
 
 ## 3. Code & supply chain
 - [ ] `package-lock.json` is COMMITTED and shipped — reproducible installs, no

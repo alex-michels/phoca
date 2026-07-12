@@ -24,13 +24,22 @@ import {
   getTransferFeeAmount,
 } from "@solana/spl-token";
 import * as fs from "fs";
-import { getConnection, loadWallet, recordTokenAccount, MINT_PATH } from "./utils";
+import {
+  getConnection,
+  assertDevnet,
+  loadWallet,
+  recordTokenAccount,
+  formatPhoca,
+  MINT_PATH,
+} from "./utils";
+import { DECIMALS, ONE_PHOCA } from "./config";
 
-const DECIMALS = 9;
-const SEND_AMOUNT = BigInt(1_000) * BigInt(10 ** DECIMALS); // 1,000 PHOCA
+const SEND_AMOUNT = 1_000n * ONE_PHOCA; // 1,000 PHOCA
 
 async function main() {
   const connection = getConnection();
+  // Verify the chain's fingerprint, not just its URL (see utils.ts)
+  await assertDevnet(connection);
   const payer = loadWallet();
 
   if (!fs.existsSync(MINT_PATH)) throw new Error("No mint found. Run `npm run create-token` first.");
@@ -60,8 +69,8 @@ async function main() {
   const epoch = BigInt((await connection.getEpochInfo()).epoch);
   const expectedFee = calculateEpochFee(feeConfig, epoch, SEND_AMOUNT);
 
-  console.log(`Sending ${SEND_AMOUNT / BigInt(10 ** DECIMALS)} PHOCA...`);
-  console.log(`Expected charity fee: ${Number(expectedFee) / 10 ** DECIMALS} PHOCA`);
+  console.log(`Sending ${formatPhoca(SEND_AMOUNT)} PHOCA...`);
+  console.log(`Expected charity fee: ${formatPhoca(expectedFee)} PHOCA`);
 
   const sig = await transferCheckedWithFee(
     connection,
@@ -84,8 +93,8 @@ async function main() {
   const withheld = getTransferFeeAmount(destAccount)?.withheldAmount ?? BigInt(0);
 
   console.log("✅ Transfer done!");
-  console.log(`Recipient received: ${Number(destAccount.amount) / 10 ** DECIMALS} PHOCA`);
-  console.log(`Withheld for charity on this account: ${Number(withheld) / 10 ** DECIMALS} PHOCA`);
+  console.log(`Recipient received: ${formatPhoca(destAccount.amount)} PHOCA`);
+  console.log(`Withheld for charity on this account: ${formatPhoca(withheld)} PHOCA`);
   console.log("Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
   console.log("\nNext: `npm run collect-fees` to sweep withheld fees into the charity treasury.");
 }

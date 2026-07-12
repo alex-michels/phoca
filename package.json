@@ -4,7 +4,7 @@
   "private": true,
   "description": "PHOCA ($PHOCA) — seal coin on Solana for seal lovers & seal rescue (devnet learning project)",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "scripts": {
     "wallet": "tsx scripts/01-create-wallet.ts",

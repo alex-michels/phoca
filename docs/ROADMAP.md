@@ -55,6 +55,9 @@ story copy exists and passes the compliance wording rules; naming file updated.
 
 - [ ] Scheduled fee sweep (script 05 on a timer) that appends every sweep tx
       to a transparency log — the habit that later becomes the monthly report
+- [ ] Sweep batching: `withdrawWithheldTokensFromAccounts` fits only ~25
+      source accounts per transaction — the automated sweep must chunk the
+      registry into batches before PHOCA has real holders (2026-07 review)
 - [ ] Localnet integration tests (`solana-test-validator`): full
       create → mint → transfer → sweep cycle asserted in code, run in CI
 - [ ] `@solana/kit` (web3.js v2) migration spike — the tracked §8 backlog

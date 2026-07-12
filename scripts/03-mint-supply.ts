@@ -16,13 +16,20 @@ import {
   mintTo,
 } from "@solana/spl-token";
 import * as fs from "fs";
-import { getConnection, loadWallet, MINT_PATH } from "./utils";
-
-const DECIMALS = 9;
-const TOTAL_SUPPLY = BigInt(1_000_000_000) * BigInt(10 ** DECIMALS); // 1 billion tokens
+import {
+  getConnection,
+  assertDevnet,
+  loadWallet,
+  recordTokenAccount,
+  formatPhoca,
+  MINT_PATH,
+} from "./utils";
+import { TOTAL_SUPPLY } from "./config";
 
 async function main() {
   const connection = getConnection();
+  // Verify the chain's fingerprint, not just its URL (see utils.ts)
+  await assertDevnet(connection);
   const payer = loadWallet();
 
   if (!fs.existsSync(MINT_PATH)) throw new Error("No mint found. Run `npm run create-token` first.");
@@ -42,6 +49,10 @@ async function main() {
     TOKEN_2022_PROGRAM_ID
   );
 
+  // The treasury can also RECEIVE transfers later (with fees withheld on it),
+  // so it goes into the registry the sweep reads (see utils.ts).
+  recordTokenAccount(treasury.address.toBase58());
+
   const sig = await mintTo(
     connection,
     payer,
@@ -54,7 +65,7 @@ async function main() {
     TOKEN_2022_PROGRAM_ID
   );
 
-  console.log("✅ Minted", TOTAL_SUPPLY / BigInt(10 ** DECIMALS), "tokens to treasury");
+  console.log(`✅ Minted ${formatPhoca(TOTAL_SUPPLY)} PHOCA to treasury`);
   console.log("Treasury token account:", treasury.address.toBase58());
   console.log("Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
 }

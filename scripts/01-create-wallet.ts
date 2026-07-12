@@ -10,10 +10,12 @@
  */
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import * as fs from "fs";
-import { getConnection, KEYS_DIR, WALLET_PATH } from "./utils";
+import { getConnection, assertDevnet, KEYS_DIR, WALLET_PATH } from "./utils";
 
 async function main() {
   const connection = getConnection();
+  // Verify the chain's fingerprint, not just its URL (see utils.ts)
+  await assertDevnet(connection);
 
   let wallet: Keypair;
   if (fs.existsSync(WALLET_PATH)) {

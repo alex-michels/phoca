@@ -19,12 +19,20 @@ import {
   getTransferFeeAmount,
 } from "@solana/spl-token";
 import * as fs from "fs";
-import { getConnection, loadWallet, readTokenAccounts, MINT_PATH } from "./utils";
-
-const DECIMALS = 9;
+import {
+  getConnection,
+  assertDevnet,
+  loadWallet,
+  readTokenAccounts,
+  recordTokenAccount,
+  formatPhoca,
+  MINT_PATH,
+} from "./utils";
 
 async function main() {
   const connection = getConnection();
+  // Verify the chain's fingerprint, not just its URL (see utils.ts)
+  await assertDevnet(connection);
   const payer = loadWallet(); // on devnet, our wallet is also the withdraw authority
 
   if (!fs.existsSync(MINT_PATH)) throw new Error("No mint found. Run `npm run create-token` first.");
@@ -67,13 +75,14 @@ async function main() {
   }
 
   console.log(`Found ${accountsWithFees.length} account(s) holding withheld fees`);
-  console.log(`Total to collect: ${Number(totalWithheld) / 10 ** DECIMALS} PHOCA`);
+  console.log(`Total to collect: ${formatPhoca(totalWithheld)} PHOCA`);
 
   // Destination: the charity treasury. On devnet we reuse our own wallet;
   // in production this MUST be the dedicated, published charity wallet.
   const charityTreasury = await getOrCreateAssociatedTokenAccount(
     connection, payer, mint, payer.publicKey, false, undefined, undefined, TOKEN_2022_PROGRAM_ID
   );
+  recordTokenAccount(charityTreasury.address.toBase58()); // registry rule: every ATA we touch
 
   const sig = await withdrawWithheldTokensFromAccounts(
     connection,
