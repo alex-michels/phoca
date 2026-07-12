@@ -9,12 +9,18 @@ rather than versioned until the first tagged release.
 ## [Unreleased]
 
 ### Added (Phase 1 — identity & content)
-- `assets/phoca-logo.svg` — seal-coin icon: electrum-gold coin ring (the
-  Phocaea nod) around an ocean-blue disc with a round seal face; readable
-  at wallet-icon sizes. `assets/phoca-metadata.json` image now points to it.
-  Repo made public by the owner (2026-07-12) — the on-chain metadata URI now
-  resolves for explorers/wallets. Remaining: owner art sign-off + 512×512
-  PNG export for SVG-less wallets (tracked in ROADMAP Phase 1).
+- `assets/phoca-logo.svg` — PRIMARY icon, chosen after a small-size UX
+  review: a flat electrum-gold coin (Phocaea minted electrum ~600 BC) with
+  a beaded rim and the seal face engraved in near-black bronze. Solid eyes
+  with gold "punched" highlights carry recognizability at 32px; three
+  whiskers per side sized to survive 48px wallet lists, plus two thinner
+  supraorbital (eyebrow) vibrissae per side — anatomically true to real
+  seals. `assets/phoca-metadata.json` image points to it. The earlier
+  blue-disc variant is kept as `assets/phoca-logo-blue.svg` (secondary
+  brand asset for web/stickers). Repo made public by the owner
+  (2026-07-12) — the on-chain metadata URI now resolves for
+  explorers/wallets. Remaining: owner final sign-off + 512×512 PNG export
+  for SVG-less wallets (tracked in ROADMAP Phase 1).
 - `docs/BRAND-STORY.md` — publication-ready brand copy (the Phocaea story,
   what PHOCA is / is not, charity mechanism as implemented, devnet status),
   written to COMPLIANCE-EU Phase C rules: no profit language, verifiable
