@@ -2,6 +2,7 @@
   "name": "phoca",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "PHOCA ($PHOCA) — seal coin on Solana for seal lovers & seal rescue (devnet learning project)",
   "engines": {
     "node": ">=22"
