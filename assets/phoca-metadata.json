@@ -2,7 +2,7 @@
   "name": "PHOCA",
   "symbol": "PHOCA",
   "description": "PHOCA ($PHOCA) — the seal coin, 2600 years in the making. A community & charity token on Solana for seal lovers worldwide: part of every transfer fee is withheld on-chain to support seal rescue centers, marine mammal research and ocean protection. Named after the seal genus Phoca and the ancient Greek city of Phocaea, whose first coins (~600 BC) bore a seal. Devnet learning build — not deployed to mainnet. Not financial advice.",
-  "image": "https://raw.githubusercontent.com/alex-michels/phoca/main/assets/phoca-logo.png",
+  "image": "https://raw.githubusercontent.com/alex-michels/phoca/main/assets/phoca-logo.svg",
   "external_url": "https://github.com/alex-michels/phoca",
   "attributes": [
     { "trait_type": "theme", "value": "seals" },
