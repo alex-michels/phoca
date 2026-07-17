@@ -55,18 +55,21 @@
   audit (a deliberate design choice — keep it that way). If custom programs
   ever appear (staking, vesting), they get a professional audit before mainnet. 
 
-## 8. Known dependency advisories & triage (checked July 2026)
-`npm audit` reports transitive advisories inside the official Solana JS stack:
-`bigint-buffer` (high, buffer overflow in toBigIntLE) and `uuid` (moderate) via
-`@solana/web3.js 1.x` → `jayson`. Triage:
-- npm's suggested "fix" downgrades to ancient broken versions — NEVER run
-  `npm audit fix --force` blindly; that is how projects break.
-- Practical exposure here: scripts run locally against devnet with throwaway
-  keys and parse data from RPCs we choose. Risk accepted for the learning phase.
-- Before ANY mainnet operational use: re-check advisories, and plan migration
-  to the modern `@solana/kit` (web3.js v2) stack where this dependency tree
-  is gone. Track this as a real backlog item, not a someday-wish.
-Lesson: an audit finding is the START of a decision, not a command.
+## 8. Dependency advisories & triage
+**Status 2026-07-18: `npm audit --omit=dev` reports 0 vulnerabilities.**
+The repo migrated to the zero-dependency `@solana/kit` stack
+(docs/KIT-MIGRATION.md) — the old advisory tree is gone by construction.
+
+Historical record (July 2026, resolved by the migration): the legacy
+`@solana/web3.js` 1.x stack carried transitive advisories — `bigint-buffer`
+(high) and `uuid` (moderate) via `jayson`. They were triaged as acceptable
+for devnet-only use, with the kit migration tracked as the real fix — and
+that is exactly what happened. Standing rules, unchanged:
+- NEVER run `npm audit fix --force` blindly; that is how projects break.
+- Re-run `npm run audit` after every dependency change, and re-check
+  advisories before ANY mainnet operational use.
+Lesson: an audit finding is the START of a decision, not a command — and a
+tracked backlog item beats a silenced warning.
 
 ## 9. Public repository posture (repo went public 2026-07-12)
 - [ ] **Secret scanning ON + push protection ON** (Settings → Advanced

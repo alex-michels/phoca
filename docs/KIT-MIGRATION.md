@@ -1,9 +1,26 @@
 # 🧭 @solana/kit migration — spike result & decision
 
-**Decision (2026-07-18): GO — migrate, as the next code-heavy milestone
-after Phase 2, and in any case before the Phase 5 mainnet dry-run (which
-already gates on it).** Recorded per ROADMAP Phase 2; researched against
-live sources, links at the bottom.
+**EXECUTED 2026-07-18** — utils + all five scripts + tests now run on
+`@solana/kit@7.0.0` + `@solana-program/token-2022@0.13.0` +
+`@solana-program/system@0.13.0` (exact-pinned, official). The legacy
+`@solana/web3.js` / `@solana/spl-token` / `@solana/spl-token-metadata`
+dependencies are REMOVED. `npm audit --omit=dev`: **0 vulnerabilities** —
+the §8 advisory tree is gone by construction, as predicted.
+
+Execution notes vs the plan below: done as ONE coordinated PR rather than
+per-script PRs, because utils is shared by every script (no mixing of
+stacks was the priority); the localnet CI gate + a live devnet run
+(existing wallet file and existing mint, loaded unchanged by the new
+stack) served as the behavior-preservation proof. The fee predictor
+(`calculateTransferFee` in utils) is now OUR tested port of the on-chain
+arithmetic — the kit stack ships no client-side calculator.
+
+---
+
+**Original decision (2026-07-18): GO — migrate, as the next code-heavy
+milestone after Phase 2, and in any case before the Phase 5 mainnet
+dry-run (which already gates on it).** Recorded per ROADMAP Phase 2;
+researched against live sources, links at the bottom.
 
 ## Why this exists
 
