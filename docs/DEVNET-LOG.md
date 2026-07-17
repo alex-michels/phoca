@@ -80,3 +80,21 @@ the URL can sound like devnet, the chain's fingerprint can't.
    own entry into docs/TRANSPARENCY-LOG.md (first auto-logged collection;
    lifetime total swept: 80 PHOCA)
    — [tx ino4xWEE…](https://explorer.solana.com/tx/ino4xWEECUZNshFTvSuGCKbyhJPzQ6KXDDuk95rUtec2Z1aAt67uGX2Cgknh3fdQURPrYBhsXhyDfhega5kMFqf?cluster=devnet)
+
+### 2026-07-18 — kit-migration verification run
+
+Purpose: prove the rewritten stack (`@solana/kit` +
+`@solana-program/token-2022`, see docs/KIT-MIGRATION.md) drives the SAME
+wallet file and the SAME mint with identical behavior. Transaction links
+are in docs/TRANSPARENCY-LOG.md (the sweep wrote its own entry, as always).
+
+1. **Transfer** — 1,000 PHOCA sent, 980 received / 20 withheld: identical
+   arithmetic on the new stack, old wallet file loaded unchanged.
+2. **Sweep + split** — collected **20.2 PHOCA**: the fresh 20 PLUS the 0.2
+   fee-on-fee crumbs from the previous distribution, returning to the pot
+   exactly as docs/FEE-SPLIT.md predicted. Split 10.1 / 5.05 / 5.05; each
+   distribution received 4.949 after the on-chain fee.
+   Lifetime total swept: 100.2 PHOCA.
+
+`npm audit` after the migration: **0 vulnerabilities** (was: 8, all in the
+legacy stack's transitive tree — SECURITY-CHECKLIST §8, now historical).

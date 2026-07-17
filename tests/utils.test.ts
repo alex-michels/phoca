@@ -6,7 +6,7 @@
  * accident. So we test it from every angle. If any of these tests fail,
  * do NOT run the scripts until you understand why.
  *
- * These tests run entirely offline — creating a Connection object only
+ * These tests run entirely offline — creating the kit rpc client only
  * stores the URL, it doesn't talk to the network.
  */
 import { test, describe, beforeEach, afterEach } from "node:test";
@@ -14,13 +14,13 @@ import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { Connection, Keypair } from "@solana/web3.js";
 import {
-  getConnection,
+  getRpc,
   assertDevnet,
   isSafeRpcUrl,
   formatPhoca,
   loadWallet,
+  generatePersistableSigner,
   readTokenAccounts,
   recordTokenAccount,
   chunk,
@@ -29,10 +29,11 @@ import {
   loadOrCreateTreasury,
   splitFee,
   DEVNET_GENESIS_HASH,
+  type RpcContext,
 } from "../scripts/utils";
 import { ONE_PHOCA } from "../scripts/config";
 
-describe("getConnection — the non-devnet interlock", () => {
+describe("getRpc — the non-devnet interlock", () => {
   // Each test gets a clean environment; whatever was set before is restored
   // after, so tests can't leak settings into each other (or into your shell).
   let savedRpcUrl: string | undefined;
@@ -53,38 +54,38 @@ describe("getConnection — the non-devnet interlock", () => {
   });
 
   test("defaults to devnet when RPC_URL is unset", () => {
-    const conn = getConnection();
-    assert.match(conn.rpcEndpoint, /devnet/);
+    const conn = getRpc();
+    assert.match(conn.url, /devnet/);
   });
 
   test("accepts an explicit devnet RPC", () => {
     process.env.RPC_URL = "https://api.devnet.solana.com";
-    assert.match(getConnection().rpcEndpoint, /devnet/);
+    assert.match(getRpc().url, /devnet/);
   });
 
   test("accepts localhost (solana-test-validator)", () => {
     process.env.RPC_URL = "http://localhost:8899";
-    assert.match(getConnection().rpcEndpoint, /localhost/);
+    assert.match(getRpc().url, /localhost/);
   });
 
   test("accepts 127.0.0.1", () => {
     process.env.RPC_URL = "http://127.0.0.1:8899";
-    assert.match(getConnection().rpcEndpoint, /127\.0\.0\.1/);
+    assert.match(getRpc().url, /127\.0\.0\.1/);
   });
 
   test("REFUSES a mainnet RPC", () => {
     process.env.RPC_URL = "https://api.mainnet-beta.solana.com";
-    assert.throws(() => getConnection(), /Refusing to run against a non-devnet RPC/);
+    assert.throws(() => getRpc(), /Refusing to run against a non-devnet RPC/);
   });
 
   test("refuses testnet too — only devnet/localnet count as safe", () => {
     process.env.RPC_URL = "https://api.testnet.solana.com";
-    assert.throws(() => getConnection(), /Refusing to run against a non-devnet RPC/);
+    assert.throws(() => getRpc(), /Refusing to run against a non-devnet RPC/);
   });
 
   test("refuses a third-party mainnet RPC (not just the official URL)", () => {
     process.env.RPC_URL = "https://solana-mainnet.example-rpc-provider.com";
-    assert.throws(() => getConnection(), /Refusing to run against a non-devnet RPC/);
+    assert.throws(() => getRpc(), /Refusing to run against a non-devnet RPC/);
   });
 
   test("the override must be EXACTLY the string 'true' — anything else stays locked", () => {
@@ -92,7 +93,7 @@ describe("getConnection — the non-devnet interlock", () => {
     for (const notQuiteTrue of ["1", "TRUE", "True", "yes", ""]) {
       process.env.I_UNDERSTAND_THIS_IS_NOT_DEVNET = notQuiteTrue;
       assert.throws(
-        () => getConnection(),
+        () => getRpc(),
         /Refusing to run against a non-devnet RPC/,
         `override value ${JSON.stringify(notQuiteTrue)} should NOT unlock the interlock`
       );
@@ -103,7 +104,7 @@ describe("getConnection — the non-devnet interlock", () => {
     process.env.RPC_URL = "https://api.mainnet-beta.solana.com";
     process.env.I_UNDERSTAND_THIS_IS_NOT_DEVNET = "true";
     // No throw expected: the human has explicitly accepted responsibility.
-    assert.match(getConnection().rpcEndpoint, /mainnet/);
+    assert.match(getRpc().url, /mainnet/);
   });
 });
 
@@ -146,11 +147,11 @@ describe("isSafeRpcUrl — adversarial inputs the old substring check missed", (
 describe("assertDevnet — the chain-fingerprint check", () => {
   // We stub the RPC call: these tests need no network. What matters is the
   // DECISION the function makes for a given genesis hash.
-  function fakeConnection(endpoint: string, genesisHash: string): Connection {
+  function fakeConnection(endpoint: string, genesisHash: string): RpcContext {
     return {
-      rpcEndpoint: endpoint,
-      getGenesisHash: async () => genesisHash,
-    } as unknown as Connection;
+      url: endpoint,
+      rpc: { getGenesisHash: () => ({ send: async () => genesisHash }) },
+    } as unknown as RpcContext;
   }
 
   let savedOverride: string | undefined;
@@ -262,24 +263,24 @@ describe("transparency log", () => {
 });
 
 describe("loadOrCreateTreasury — separate wallets, created once", () => {
-  test("creates a treasury on first use and loads the SAME key afterwards", () => {
+  test("creates a treasury on first use and loads the SAME key afterwards", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-treasury-"));
     try {
-      const first = loadOrCreateTreasury("community", dir);
-      const second = loadOrCreateTreasury("community", dir);
-      assert.equal(second.publicKey.toBase58(), first.publicKey.toBase58());
+      const first = await loadOrCreateTreasury("community", dir);
+      const second = await loadOrCreateTreasury("community", dir);
+      assert.equal(second.address, first.address);
       assert.ok(fs.existsSync(path.join(dir, "treasury-community.json")));
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 
-  test("different treasury names get genuinely different keys", () => {
+  test("different treasury names get genuinely different keys", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-treasury-"));
     try {
-      const community = loadOrCreateTreasury("community", dir);
-      const liquidity = loadOrCreateTreasury("liquidity", dir);
-      assert.notEqual(community.publicKey.toBase58(), liquidity.publicKey.toBase58());
+      const community = await loadOrCreateTreasury("community", dir);
+      const liquidity = await loadOrCreateTreasury("liquidity", dir);
+      assert.notEqual(community.address, liquidity.address);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -357,31 +358,31 @@ describe("token account registry (feeds the fee sweep)", () => {
 });
 
 describe("loadWallet", () => {
-  test("throws a friendly error when the wallet file doesn't exist", () => {
+  test("rejects with a friendly error when the wallet file doesn't exist", async () => {
     const missing = path.join(os.tmpdir(), "phoca-definitely-not-here.json");
-    assert.throws(() => loadWallet(missing), /No wallet found/);
+    await assert.rejects(loadWallet(missing), /No wallet found/);
   });
 
-  test("round-trips a keypair saved in the standard format", () => {
+  test("round-trips a keypair saved in the standard 64-byte format", async () => {
     // We write a throwaway keypair to the OS temp dir — NEVER to keys/.
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-test-"));
     const walletPath = path.join(dir, "wallet.json");
     try {
-      const original = Keypair.generate();
-      fs.writeFileSync(walletPath, JSON.stringify(Array.from(original.secretKey)));
-      const loaded = loadWallet(walletPath);
-      assert.equal(loaded.publicKey.toBase58(), original.publicKey.toBase58());
+      const { signer, secretBytes } = await generatePersistableSigner();
+      fs.writeFileSync(walletPath, JSON.stringify(Array.from(secretBytes)));
+      const loaded = await loadWallet(walletPath);
+      assert.equal(loaded.address, signer.address);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 
-  test("a corrupted wallet file gives a friendly error that leaks nothing", () => {
+  test("a corrupted wallet file gives a friendly error that leaks nothing", async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-test-"));
     const walletPath = path.join(dir, "wallet.json");
     try {
       fs.writeFileSync(walletPath, "definitely-not-json-secret-stuff");
-      assert.throws(() => loadWallet(walletPath), (err: Error) => {
+      await assert.rejects(loadWallet(walletPath), (err: Error) => {
         assert.match(err.message, /corrupted/);
         // The error must never echo the file's CONTENT (could be key material).
         assert.doesNotMatch(err.message, /definitely-not-json-secret-stuff/);

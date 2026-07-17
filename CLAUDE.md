@@ -18,7 +18,8 @@ as the owner's textbook.
   scripts/config.ts — the single source of truth for scripts AND tests.
 
 ## Tech stack
-- TypeScript + Node.js, @solana/web3.js + @solana/spl-token (exact-pinned versions)
+- TypeScript + Node.js, @solana/kit + @solana-program/token-2022 (exact-pinned;
+  migrated from web3.js 1.x — see docs/KIT-MIGRATION.md)
 - Network: **devnet only**; utils.ts enforces a hard interlock on non-devnet RPCs
 
 ## Commands

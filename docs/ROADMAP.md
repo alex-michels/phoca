@@ -135,8 +135,8 @@ if unchecked. Maps to SECURITY-CHECKLIST §2 (authority matrix) and §4.
 
 - [ ] Full devnet dry-run of launch day: create → mint → revoke → LP → lock →
       sweep → transparency post, end to end, timed
-- [ ] Dependencies re-audited; `@solana/kit` migration done or explicitly
-      re-accepted 🔎; lockfile frozen for launch
+- [ ] Dependencies re-audited (kit migration DONE 2026-07-18, audit clean —
+      re-verify at launch time 🔎); lockfile frozen for launch
 - [ ] Squads multisig live (2-of-3 minimum, hardware keys): transfer-fee
       authority + withdraw authority + metadata update authority move there
 - [ ] Supply minted on mainnet → **mint authority REVOKED**, tx published

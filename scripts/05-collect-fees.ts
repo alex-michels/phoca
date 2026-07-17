@@ -3,8 +3,7 @@
  *
  * Fees don't fly to the charity wallet by themselves: they accumulate as
  * "withheld" amounts on every token account that received transfers. This
- * script scans all PHOCA token accounts, finds the withheld crumbs, and
- * sweeps them into the charity treasury in one transaction.
+ * script finds the withheld crumbs and sweeps them into the treasury.
  *
  * Three production-shaped behaviors are built in:
  *   - BATCHING: a Solana transaction fits only ~25 withdraw sources, so the
@@ -17,30 +16,30 @@
  *   - TRANSPARENCY LOG: every sweep auto-appends date/amount/split/tx links
  *     to docs/TRANSPARENCY-LOG.md — the raw feed for the monthly report.
  *
- * To run on a schedule: Windows Task Scheduler (or cron on Linux/Mac) calling
- * `npm run collect-fees` weekly is enough for devnet. In production the
- * withdraw authority is a multisig, not a single laptop key.
+ * To run on a schedule: scripts/schedule-sweep.ps1 (or cron). In production
+ * the withdraw authority is a multisig, not a single laptop key.
  */
-import { PublicKey } from "@solana/web3.js";
+import { address, type Address, type Instruction } from "@solana/kit";
 import {
-  TOKEN_2022_PROGRAM_ID,
-  getOrCreateAssociatedTokenAccount,
-  withdrawWithheldTokensFromAccounts,
-  getAccount,
-  getTransferFeeAmount,
-  getMint,
-  getTransferFeeConfig,
-  calculateEpochFee,
-  transferCheckedWithFee,
-} from "@solana/spl-token";
+  TOKEN_2022_PROGRAM_ADDRESS,
+  fetchMint,
+  fetchToken,
+  findAssociatedTokenPda,
+  getCreateAssociatedTokenIdempotentInstruction,
+  getTransferCheckedWithFeeInstruction,
+  getWithdrawWithheldTokensFromAccountsInstruction,
+} from "@solana-program/token-2022";
 import * as fs from "fs";
 import {
-  getConnection,
+  getRpc,
   assertDevnet,
   loadWallet,
   loadOrCreateTreasury,
+  sendInstructions,
   readTokenAccounts,
   recordTokenAccount,
+  findExtension,
+  calculateTransferFee,
   formatPhoca,
   chunk,
   splitFee,
@@ -55,38 +54,37 @@ import { DECIMALS } from "./config";
 const MAX_ACCOUNTS_PER_TX = 20;
 
 async function main() {
-  const connection = getConnection();
+  const ctx = getRpc();
   // Verify the chain's fingerprint, not just its URL (see utils.ts)
-  await assertDevnet(connection);
-  const payer = loadWallet(); // on devnet, our wallet is also the withdraw authority
+  await assertDevnet(ctx);
+  const payer = await loadWallet(); // on devnet, our wallet is also the withdraw authority
 
   if (!fs.existsSync(MINT_PATH)) throw new Error("No mint found. Run `npm run create-token` first.");
-  const mint = new PublicKey(fs.readFileSync(MINT_PATH, "utf-8").trim());
+  const mint = address(fs.readFileSync(MINT_PATH, "utf-8").trim());
 
   // HOW WE FIND THE FEE CRUMBS — and why not the "obvious" way:
   // Scanning ALL accounts of the Token-2022 program (getProgramAccounts) is
   // disabled on public RPCs, and even "top holders" scans are heavily
   // rate-limited. So the transfer script RECORDS every account it touches in
   // a local registry (see utils.ts), and we just check those with cheap
-  // per-account lookups. The RPC scan remains only as a fallback for when
-  // the registry doesn't exist yet. On mainnet, with thousands of holders,
-  // this becomes an indexer service (planned in docs/ROADMAP.md Phase 2).
-  let candidates: PublicKey[] = readTokenAccounts().map((a) => new PublicKey(a));
+  // per-account lookups. On mainnet, with thousands of holders, this becomes
+  // an indexer service (planned in docs/ROADMAP.md).
+  const candidates = readTokenAccounts().map((a) => address(a));
   if (candidates.length === 0) {
-    console.log("No local registry found — falling back to an RPC holder scan...");
-    const largest = await connection.getTokenLargestAccounts(mint, "confirmed");
-    candidates = largest.value.map((v) => v.address);
+    console.log("No registry yet. Run `npm run transfer-test` a few times first.");
+    return;
   }
 
-  const accountsWithFees: PublicKey[] = [];
-  let totalWithheld = BigInt(0);
+  const accountsWithFees: Address[] = [];
+  let totalWithheld = 0n;
 
-  for (const address of candidates) {
+  for (const tokenAccount of candidates) {
     try {
-      const parsed = await getAccount(connection, address, "confirmed", TOKEN_2022_PROGRAM_ID);
-      const withheld = getTransferFeeAmount(parsed)?.withheldAmount ?? BigInt(0);
-      if (withheld > BigInt(0)) {
-        accountsWithFees.push(address);
+      const parsed = await fetchToken(ctx.rpc, tokenAccount);
+      const withheld =
+        findExtension(parsed.data.extensions, "TransferFeeAmount")?.withheldAmount ?? 0n;
+      if (withheld > 0n) {
+        accountsWithFees.push(tokenAccount);
         totalWithheld += withheld;
       }
     } catch {
@@ -104,26 +102,33 @@ async function main() {
 
   // Destination: the charity treasury. On devnet we reuse our own wallet;
   // in production this MUST be the dedicated, published charity wallet.
-  const charityTreasury = await getOrCreateAssociatedTokenAccount(
-    connection, payer, mint, payer.publicKey, false, undefined, undefined, TOKEN_2022_PROGRAM_ID
-  );
-  recordTokenAccount(charityTreasury.address.toBase58()); // registry rule: every ATA we touch
+  const [charityAta] = await findAssociatedTokenPda({
+    owner: payer.address, mint, tokenProgram: TOKEN_2022_PROGRAM_ADDRESS,
+  });
+  recordTokenAccount(charityAta); // registry rule: every ATA we touch
 
-  // One transaction per batch — see MAX_ACCOUNTS_PER_TX above.
+  // One transaction per batch — see MAX_ACCOUNTS_PER_TX above. The first
+  // batch also (idempotently) ensures the charity ATA exists.
   const batches = chunk(accountsWithFees, MAX_ACCOUNTS_PER_TX);
   const signatures: string[] = [];
   for (let i = 0; i < batches.length; i++) {
-    const sig = await withdrawWithheldTokensFromAccounts(
-      connection,
-      payer,
-      mint,
-      charityTreasury.address,
-      payer, // withdrawWithheldAuthority (multisig in production!)
-      [],
-      batches[i],
-      undefined,
-      TOKEN_2022_PROGRAM_ID
-    );
+    const instructions: Instruction[] = [
+      getWithdrawWithheldTokensFromAccountsInstruction({
+        mint,
+        feeReceiver: charityAta,
+        withdrawWithheldAuthority: payer, // multisig in production!
+        numTokenAccounts: batches[i].length,
+        sources: batches[i],
+      }),
+    ];
+    if (i === 0) {
+      instructions.unshift(
+        getCreateAssociatedTokenIdempotentInstruction({
+          payer, ata: charityAta, owner: payer.address, mint,
+        })
+      );
+    }
+    const sig = await sendInstructions(ctx, payer, instructions);
     signatures.push(sig);
     console.log(`✅ Batch ${i + 1}/${batches.length}: swept ${batches[i].length} account(s)`);
     console.log("   Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
@@ -146,37 +151,37 @@ async function main() {
     { name: "liquidity", amount: split.liquidity },
   ];
   if (shares.some((s) => s.amount > 0n)) {
-    // Read the live fee rule once; transferCheckedWithFee demands the exact fee.
-    const mintInfo = await getMint(connection, mint, "confirmed", TOKEN_2022_PROGRAM_ID);
-    const feeConfig = getTransferFeeConfig(mintInfo);
+    // Read the live fee rule once; TransferCheckedWithFee demands the exact fee.
+    const mintAccount = await fetchMint(ctx.rpc, mint);
+    const feeConfig = findExtension(mintAccount.data.extensions, "TransferFeeConfig");
     if (!feeConfig) throw new Error("This mint has no transfer fee config?!");
-    const epoch = BigInt((await connection.getEpochInfo()).epoch);
+    const { epoch } = await ctx.rpc.getEpochInfo().send();
 
     for (const { name, amount } of shares) {
       if (amount === 0n) continue;
       // Each non-charity treasury is its OWN wallet (created on first run,
       // stored in keys/, git-ignored) — separate wallets, checklist §1.
-      const treasury = loadOrCreateTreasury(name);
-      const treasuryAta = await getOrCreateAssociatedTokenAccount(
-        connection, payer, mint, treasury.publicKey, false, undefined, undefined, TOKEN_2022_PROGRAM_ID
-      );
-      recordTokenAccount(treasuryAta.address.toBase58()); // registry rule
+      const treasury = await loadOrCreateTreasury(name);
+      const [treasuryAta] = await findAssociatedTokenPda({
+        owner: treasury.address, mint, tokenProgram: TOKEN_2022_PROGRAM_ADDRESS,
+      });
+      recordTokenAccount(treasuryAta); // registry rule
 
-      const expectedFee = calculateEpochFee(feeConfig, epoch, amount);
-      const sig = await transferCheckedWithFee(
-        connection,
-        payer,
-        charityTreasury.address,
-        mint,
-        treasuryAta.address,
-        payer,
-        amount,
-        DECIMALS,
-        expectedFee,
-        [],
-        undefined,
-        TOKEN_2022_PROGRAM_ID
-      );
+      const expectedFee = calculateTransferFee(feeConfig, epoch, amount);
+      const sig = await sendInstructions(ctx, payer, [
+        getCreateAssociatedTokenIdempotentInstruction({
+          payer, ata: treasuryAta, owner: treasury.address, mint,
+        }),
+        getTransferCheckedWithFeeInstruction({
+          source: charityAta,
+          mint,
+          destination: treasuryAta,
+          authority: payer,
+          amount,
+          decimals: DECIMALS,
+          fee: expectedFee,
+        }),
+      ]);
       distributions.push({ name, signature: sig });
       console.log(
         `✅ ${name}: sent ${formatPhoca(amount)} PHOCA ` +
@@ -201,4 +206,7 @@ async function main() {
   console.log("🧾 Entry appended to docs/TRANSPARENCY-LOG.md — commit it via PR (rule 9).");
 }
 
-main().catch(console.error);
+main().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

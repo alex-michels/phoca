@@ -8,6 +8,33 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Changed (kit migration, 2026-07-18)
+- **Migrated the entire stack** from `@solana/web3.js` 1.x +
+  `@solana/spl-token` to `@solana/kit@7.0.0` +
+  `@solana-program/token-2022@0.13.0` + `@solana-program/system@0.13.0`
+  (exact-pinned, official Anza / solana-program packages). Legacy packages
+  removed. **`npm audit --omit=dev` now reports 0 vulnerabilities** — the
+  SECURITY-CHECKLIST §8 advisory tree (`bigint-buffer`, `uuid`/`jayson`)
+  is gone by construction; §8 rewritten as resolved-with-history.
+- Wallet files stay byte-compatible (standard 64-byte seed+pubkey format):
+  the existing devnet wallet and treasuries load unchanged on the new
+  stack — verified live on devnet (transfer 980/20, sweep of 20.2 incl.
+  the 0.2 fee-on-fee crumbs returning exactly as FEE-SPLIT.md predicted,
+  split 10.1/5.05/5.05, distributions received 4.949).
+- New in utils: `getRpc()`/`RpcContext` (kit rpc + url), `sendInstructions`
+  + `confirmSignature` (build/sign/send/poll-confirm, no websockets),
+  `generatePersistableSigner`, `findExtension` (typed Token-2022 extension
+  access), and `calculateTransferFee` — OUR tested port of the on-chain
+  fee arithmetic (kit ships no client-side calculator); the fee-math suite
+  keeps its exact pre-migration expectations as the equivalence proof.
+  `loadWallet`/`loadOrCreateTreasury` are now async.
+- Scripts 01–05 rewritten to kit instruction style (ATA creation is now
+  idempotent and bundled into the same transaction as the operation);
+  unit + integration tests adapted, all 58 green; localnet CI gate proves
+  the full lifecycle end to end on the new stack.
+- CLAUDE.md tech-stack line, KIT-MIGRATION.md (EXECUTED), ROADMAP Phase 5
+  gate note updated.
+
 ### Added (Phase 2 wrap-up: sweep timer + kit decision, 2026-07-18)
 - `scripts/schedule-sweep.ps1` — registers (or removes, `-Remove`) a
   weekly Sunday-12:00 Windows Scheduled Task running

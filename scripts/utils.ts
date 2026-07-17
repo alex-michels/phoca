@@ -1,8 +1,30 @@
 /**
  * utils.ts — small helpers shared by all scripts.
  * Think of this as the "toolbox" every other script borrows from.
+ *
+ * Stack: @solana/kit (the modern, zero-dependency Solana SDK by Anza) +
+ * @solana-program/token-2022. Migrated from web3.js 1.x per
+ * docs/KIT-MIGRATION.md — behavior is identical, proven by the localnet
+ * integration gate in CI.
  */
-import { Connection, Keypair } from "@solana/web3.js";
+import {
+  createSolanaRpc,
+  createKeyPairSignerFromBytes,
+  createKeyPairSignerFromPrivateKeyBytes,
+  getAddressEncoder,
+  getBase64EncodedWireTransaction,
+  getSignatureFromTransaction,
+  createTransactionMessage,
+  setTransactionMessageFeePayerSigner,
+  setTransactionMessageLifetimeUsingBlockhash,
+  appendTransactionMessageInstructions,
+  signTransactionMessageWithSigners,
+  pipe,
+  type Instruction,
+  type KeyPairSigner,
+  type Option,
+} from "@solana/kit";
+import { type Extension } from "@solana-program/token-2022";
 import * as fs from "fs";
 import * as path from "path";
 import * as dotenv from "dotenv";
@@ -32,6 +54,12 @@ export const TRANSPARENCY_LOG_PATH =
  */
 export const DEVNET_GENESIS_HASH = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
 
+/** Our RPC bundle: the kit rpc client plus the URL it points at (kit doesn't expose it). */
+export interface RpcContext {
+  rpc: ReturnType<typeof createSolanaRpc>;
+  url: string;
+}
+
 /** Is this a local test validator address? (Its genesis hash is random, so we skip that check.) */
 export function isLocalhostUrl(url: string): boolean {
   try {
@@ -45,11 +73,11 @@ export function isLocalhostUrl(url: string): boolean {
 /**
  * Pure, testable core of the interlock: does this RPC URL point somewhere safe?
  *
- * We parse the URL and look at the HOSTNAME only. The old check searched the
- * whole URL string, so `https://mainnet-rpc.example.com/?key=devnet` (magic
- * word in the query) or `https://evil-localhost.com` (sound-alike hostname)
- * would have passed. Now: localhost must match exactly, and "devnet" must
- * appear inside a hostname label (api.devnet.solana.com, devnet.helius-rpc.com,
+ * We parse the URL and look at the HOSTNAME only. A substring check over the
+ * whole URL could be fooled by `https://mainnet-rpc.example.com/?key=devnet`
+ * (magic word in the query) or `https://evil-localhost.com` (sound-alike
+ * hostname). Here: localhost must match exactly, and "devnet" must appear
+ * inside a hostname label (api.devnet.solana.com, devnet.helius-rpc.com,
  * solana-devnet.g.alchemy.com — all fine). Unparseable URLs are refused:
  * not provably safe = not safe.
  */
@@ -73,7 +101,7 @@ export function isSafeRpcUrl(url: string): boolean {
  * classic beginner disaster: accidentally running a test script against
  * mainnet with real money. See docs/SECURITY-CHECKLIST.md.
  */
-export function getConnection(): Connection {
+export function getRpc(): RpcContext {
   const url = process.env.RPC_URL ?? "https://api.devnet.solana.com";
 
   if (!isSafeRpcUrl(url) && process.env.I_UNDERSTAND_THIS_IS_NOT_DEVNET !== "true") {
@@ -84,8 +112,7 @@ export function getConnection(): Connection {
         "in .env and re-read docs/SECURITY-CHECKLIST.md first."
     );
   }
-  // "confirmed" = wait until the network has reasonably accepted our transaction
-  return new Connection(url, "confirmed");
+  return { rpc: createSolanaRpc(url), url };
 }
 
 /**
@@ -95,10 +122,10 @@ export function getConnection(): Connection {
  * hash), and the explicit .env override skips the check the same way it
  * opens the URL interlock — one override, one decision.
  */
-export async function assertDevnet(connection: Connection): Promise<void> {
+export async function assertDevnet(ctx: RpcContext): Promise<void> {
   if (process.env.I_UNDERSTAND_THIS_IS_NOT_DEVNET === "true") return;
-  if (isLocalhostUrl(connection.rpcEndpoint)) return;
-  const genesisHash = await connection.getGenesisHash();
+  if (isLocalhostUrl(ctx.url)) return;
+  const genesisHash = await ctx.rpc.getGenesisHash().send();
   if (genesisHash !== DEVNET_GENESIS_HASH) {
     throw new Error(
       "🛑 This RPC's genesis hash does not match devnet.\n" +
@@ -107,6 +134,52 @@ export async function assertDevnet(connection: Connection): Promise<void> {
         "The URL looked safe, but the chain behind it is NOT devnet. Refusing to continue."
     );
   }
+}
+
+/**
+ * Build, sign, send and confirm one transaction from a list of instructions.
+ * Kit is functional: we assemble a message, every embedded signer signs, and
+ * we confirm by polling the signature status (no websockets needed).
+ */
+export async function sendInstructions(
+  ctx: RpcContext,
+  payer: KeyPairSigner,
+  instructions: Instruction[]
+): Promise<string> {
+  const { value: latestBlockhash } = await ctx.rpc.getLatestBlockhash().send();
+  const message = pipe(
+    createTransactionMessage({ version: 0 }),
+    (m) => setTransactionMessageFeePayerSigner(payer, m),
+    (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
+    (m) => appendTransactionMessageInstructions(instructions, m)
+  );
+  const signed = await signTransactionMessageWithSigners(message);
+  const signature = getSignatureFromTransaction(signed);
+  await ctx.rpc
+    .sendTransaction(getBase64EncodedWireTransaction(signed), { encoding: "base64" })
+    .send();
+  await confirmSignature(ctx, signature);
+  return signature;
+}
+
+/** Poll until the cluster confirms the signature (or give up loudly). */
+export async function confirmSignature(ctx: RpcContext, signature: string): Promise<void> {
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const { value } = await ctx.rpc
+      .getSignatureStatuses([signature as Parameters<typeof ctx.rpc.getSignatureStatuses>[0][number]])
+      .send();
+    const status = value[0];
+    if (status) {
+      if (status.err) {
+        throw new Error(`Transaction ${signature} failed on-chain: ${JSON.stringify(status.err)}`);
+      }
+      if (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized") {
+        return;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`Transaction ${signature} was not confirmed in time.`);
 }
 
 /**
@@ -160,16 +233,18 @@ export function recordTokenAccount(
 
 /**
  * Load the wallet created by 01-create-wallet.ts.
- * The path parameter exists so tests can point at a temporary file —
- * every real script simply calls loadWallet() and gets the default.
+ * The stored format is the standard 64-byte Solana secret key (32-byte seed
+ * followed by the 32-byte public key) — the SAME format as before the kit
+ * migration, so existing wallet files keep working unchanged.
+ * The path parameter exists so tests can point at a temporary file.
  */
-export function loadWallet(walletPath: string = WALLET_PATH): Keypair {
+export async function loadWallet(walletPath: string = WALLET_PATH): Promise<KeyPairSigner> {
   if (!fs.existsSync(walletPath)) {
     throw new Error("No wallet found. Run `npm run wallet` first.");
   }
   try {
-    const secret = Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")));
-    return Keypair.fromSecretKey(secret);
+    const bytes = Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")));
+    return await createKeyPairSignerFromBytes(bytes);
   } catch {
     // Deliberately NO details from inside the file in this message —
     // error text must never leak key material.
@@ -178,6 +253,125 @@ export function loadWallet(walletPath: string = WALLET_PATH): Keypair {
         "On devnet: delete it and run `npm run wallet` to create a fresh one."
     );
   }
+}
+
+/**
+ * Generate a NEW wallet whose secret can be saved to disk.
+ * (Kit's default signers keep keys non-extractable — great for apps, useless
+ * for a devnet wallet file — so we generate the 32-byte seed ourselves and
+ * store the classic 64-byte seed+pubkey format.)
+ */
+export async function generatePersistableSigner(): Promise<{
+  signer: KeyPairSigner;
+  secretBytes: Uint8Array;
+}> {
+  const seed = new Uint8Array(32);
+  crypto.getRandomValues(seed);
+  const signer = await createKeyPairSignerFromPrivateKeyBytes(seed);
+  const pubkeyBytes = getAddressEncoder().encode(signer.address);
+  const secretBytes = new Uint8Array(64);
+  secretBytes.set(seed, 0);
+  secretBytes.set(new Uint8Array(pubkeyBytes), 32);
+  return { signer, secretBytes };
+}
+
+/**
+ * Load a named treasury wallet from keys/, creating it on first use.
+ * Devnet practice for checklist §1 "separate wallets": community and
+ * liquidity get their OWN keypairs (keys/treasury-<name>.json, git-ignored),
+ * so the split lands in genuinely separate hands — on mainnet these become
+ * multisigs with published addresses instead.
+ */
+export async function loadOrCreateTreasury(
+  name: string,
+  dir: string = KEYS_DIR
+): Promise<KeyPairSigner> {
+  const treasuryPath = path.join(dir, `treasury-${name}.json`);
+  if (fs.existsSync(treasuryPath)) {
+    return loadWallet(treasuryPath);
+  }
+  const { signer, secretBytes } = await generatePersistableSigner();
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(treasuryPath, JSON.stringify(Array.from(secretBytes)));
+  return signer;
+}
+
+/**
+ * Pull one typed extension out of a fetched Token-2022 account's extension
+ * list (mints carry TransferFeeConfig/MetadataPointer/…, token accounts
+ * carry TransferFeeAmount with the withheld fees). Extensions arrive as an
+ * Option<Array<Extension>> — this unwraps and narrows in one move.
+ */
+export function findExtension<K extends Extension["__kind"]>(
+  extensions: Option<Extension[]>,
+  kind: K
+): Extract<Extension, { __kind: K }> | undefined {
+  if (extensions.__option !== "Some") return undefined;
+  return extensions.value.find(
+    (e): e is Extract<Extension, { __kind: K }> => e.__kind === kind
+  );
+}
+
+/** The two fee schedules a Token-2022 mint carries (older/newer, epoch-gated). */
+export interface TransferFeeSchedule {
+  epoch: bigint;
+  maximumFee: bigint;
+  transferFeeBasisPoints: number;
+}
+export interface TransferFeeConfigLike {
+  olderTransferFee: TransferFeeSchedule;
+  newerTransferFee: TransferFeeSchedule;
+}
+
+/**
+ * Predict the fee the on-chain program will charge — OUR port of the
+ * program's arithmetic (ceiling division, capped), epoch-aware:
+ *
+ *   fee = ceil(amount × basis_points / 10_000), capped at maximumFee
+ *
+ * The old stack shipped this as calculateEpochFee; the kit stack doesn't,
+ * so we own it — and the fee-math test suite pins it to the exact same
+ * behavior (same expectations as before the migration).
+ */
+export function calculateTransferFee(
+  config: TransferFeeConfigLike,
+  epoch: bigint,
+  amount: bigint
+): bigint {
+  const fee =
+    epoch >= config.newerTransferFee.epoch
+      ? config.newerTransferFee
+      : config.olderTransferFee;
+  const bps = BigInt(fee.transferFeeBasisPoints);
+  if (bps === 0n || amount === 0n) return 0n;
+  const raw = (amount * bps + 9_999n) / 10_000n;
+  return raw > fee.maximumFee ? fee.maximumFee : raw;
+}
+
+export interface FeeSplit {
+  charity: bigint;
+  community: bigint;
+  liquidity: bigint;
+}
+
+/**
+ * Split a swept fee pot into the three treasuries per FEE_SPLIT_BPS.
+ *
+ * Integer math can't always divide exactly — 101 base units × 25% is 25.25.
+ * Policy: community and liquidity round DOWN, and charity takes everything
+ * that's left. Every rounding crumb goes to the seals, by design, and the
+ * three parts ALWAYS sum to exactly the input — that invariant is tested
+ * hard, because "almost adds up" is how treasuries leak.
+ * See docs/FEE-SPLIT.md for the full design.
+ */
+export function splitFee(totalBaseUnits: bigint): FeeSplit {
+  if (totalBaseUnits < 0n) {
+    throw new Error(`splitFee: negative amount ${totalBaseUnits}`);
+  }
+  const community = (totalBaseUnits * BigInt(FEE_SPLIT_BPS.community)) / 10_000n;
+  const liquidity = (totalBaseUnits * BigInt(FEE_SPLIT_BPS.liquidity)) / 10_000n;
+  const charity = totalBaseUnits - community - liquidity;
+  return { charity, community, liquidity };
 }
 
 /**
@@ -270,50 +464,6 @@ export function appendSweepLogEntry(
     fs.writeFileSync(logPath, TRANSPARENCY_LOG_HEADER);
   }
   fs.appendFileSync(logPath, entry);
-}
-
-export interface FeeSplit {
-  charity: bigint;
-  community: bigint;
-  liquidity: bigint;
-}
-
-/**
- * Load a named treasury wallet from keys/, creating it on first use.
- * Devnet practice for checklist §1 "separate wallets": community and
- * liquidity get their OWN keypairs (keys/treasury-<name>.json, git-ignored),
- * so the split lands in genuinely separate hands — on mainnet these become
- * multisigs with published addresses instead.
- */
-export function loadOrCreateTreasury(name: string, dir: string = KEYS_DIR): Keypair {
-  const treasuryPath = path.join(dir, `treasury-${name}.json`);
-  if (fs.existsSync(treasuryPath)) {
-    return loadWallet(treasuryPath);
-  }
-  const keypair = Keypair.generate();
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(treasuryPath, JSON.stringify(Array.from(keypair.secretKey)));
-  return keypair;
-}
-
-/**
- * Split a swept fee pot into the three treasuries per FEE_SPLIT_BPS.
- *
- * Integer math can't always divide exactly — 101 base units × 25% is 25.25.
- * Policy: community and liquidity round DOWN, and charity takes everything
- * that's left. Every rounding crumb goes to the seals, by design, and the
- * three parts ALWAYS sum to exactly the input — that invariant is tested
- * hard, because "almost adds up" is how treasuries leak.
- * See docs/FEE-SPLIT.md for the full design.
- */
-export function splitFee(totalBaseUnits: bigint): FeeSplit {
-  if (totalBaseUnits < 0n) {
-    throw new Error(`splitFee: negative amount ${totalBaseUnits}`);
-  }
-  const community = (totalBaseUnits * BigInt(FEE_SPLIT_BPS.community)) / 10_000n;
-  const liquidity = (totalBaseUnits * BigInt(FEE_SPLIT_BPS.liquidity)) / 10_000n;
-  const charity = totalBaseUnits - community - liquidity;
-  return { charity, community, liquidity };
 }
 
 /**

@@ -22,9 +22,10 @@ import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { getMint, getTransferFeeConfig, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { createSolanaRpc, address } from "@solana/kit";
+import { fetchMint } from "@solana-program/token-2022";
 import { FEE_BASIS_POINTS, MAX_FEE } from "../../scripts/config";
+import { findExtension } from "../../scripts/utils";
 
 const LOCALNET = "http://127.0.0.1:8899";
 const REPO_ROOT = path.join(__dirname, "..", "..");
@@ -93,15 +94,17 @@ test(
         .trim();
 
       // Don't trust the script's stdout — ask the CHAIN what rule it enforces
-      const connection = new Connection(LOCALNET, "confirmed");
-      const mintInfo = await getMint(
-        connection, new PublicKey(mintAddress), "confirmed", TOKEN_2022_PROGRAM_ID
-      );
-      const feeConfig = getTransferFeeConfig(mintInfo);
+      const rpc = createSolanaRpc(LOCALNET);
+      const mintAccount = await fetchMint(rpc, address(mintAddress));
+      const feeConfig = findExtension(mintAccount.data.extensions, "TransferFeeConfig");
       assert.ok(feeConfig, "mint must carry a transfer fee config");
       assert.equal(feeConfig.newerTransferFee.transferFeeBasisPoints, FEE_BASIS_POINTS);
       assert.equal(feeConfig.newerTransferFee.maximumFee, MAX_FEE);
-      assert.equal(mintInfo.freezeAuthority, null, "freeze authority must be null by design");
+      assert.equal(
+        mintAccount.data.freezeAuthority.__option,
+        "None",
+        "freeze authority must be null by design"
+      );
 
       // 03 — full supply
       const out3 = runScript("03-mint-supply.ts", env);
