@@ -26,6 +26,8 @@ import {
   chunk,
   formatSweepLogEntry,
   appendSweepLogEntry,
+  loadOrCreateTreasury,
+  splitFee,
   DEVNET_GENESIS_HASH,
 } from "../scripts/utils";
 import { ONE_PHOCA } from "../scripts/config";
@@ -223,6 +225,24 @@ describe("transparency log", () => {
     assert.match(entry, /Transaction \(1\):/);
   });
 
+  test("an entry with split + distributions records the division and both transfers", () => {
+    const split = splitFee(100n * ONE_PHOCA);
+    const entry = formatSweepLogEntry("2026-07-18", 100n * ONE_PHOCA, 2, ["SweepSig1"], split, [
+      { name: "community", signature: "CommSig11" },
+      { name: "liquidity", signature: "LiqSig111" },
+    ]);
+    assert.match(entry, /Split of the pot: charity keeps 50 · community 25 · liquidity 25/);
+    assert.match(entry, /Distribution transfers .*2% fee applies/);
+    assert.match(entry, /community: \[CommSig1…\]\(https:\/\/explorer\.solana\.com\/tx\/CommSig11\?cluster=devnet\)/);
+    assert.match(entry, /liquidity: \[LiqSig11…\]/);
+  });
+
+  test("entries without split stay exactly as before (backward compatible)", () => {
+    const entry = formatSweepLogEntry("2026-07-18", 20n * ONE_PHOCA, 1, ["OnlySig"]);
+    assert.doesNotMatch(entry, /Split of the pot/);
+    assert.doesNotMatch(entry, /Distribution/);
+  });
+
   test("appending creates the file with its header ONCE, then only appends", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-translog-"));
     const logPath = path.join(dir, "TRANSPARENCY-LOG.md");
@@ -235,6 +255,31 @@ describe("transparency log", () => {
       assert.match(content, /first entry/);
       assert.match(content, /second entry/);
       assert.ok(content.indexOf("first entry") < content.indexOf("second entry"));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("loadOrCreateTreasury — separate wallets, created once", () => {
+  test("creates a treasury on first use and loads the SAME key afterwards", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-treasury-"));
+    try {
+      const first = loadOrCreateTreasury("community", dir);
+      const second = loadOrCreateTreasury("community", dir);
+      assert.equal(second.publicKey.toBase58(), first.publicKey.toBase58());
+      assert.ok(fs.existsSync(path.join(dir, "treasury-community.json")));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("different treasury names get genuinely different keys", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-treasury-"));
+    try {
+      const community = loadOrCreateTreasury("community", dir);
+      const liquidity = loadOrCreateTreasury("liquidity", dir);
+      assert.notEqual(community.publicKey.toBase58(), liquidity.publicKey.toBase58());
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

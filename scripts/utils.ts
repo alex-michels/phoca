@@ -200,15 +200,26 @@ by \`npm run collect-fees\` and committed via PR like everything else.
 Do not edit entries by hand — the unbroken history IS the point.
 `;
 
+/** One distribution transfer out of the pot (community/liquidity share). */
+export interface SweepDistribution {
+  name: string;
+  signature: string;
+}
+
 /**
  * Render one sweep as a markdown log entry. Pure function (tested).
+ * When split/distributions are provided, the entry also records how the pot
+ * divided and the transfer for each non-charity share (charity's share stays
+ * in the collection treasury — no transfer, no fee; see docs/FEE-SPLIT.md).
  * Explorer links carry ?cluster=devnet — that suffix goes away on mainnet.
  */
 export function formatSweepLogEntry(
   dateIso: string,
   totalBaseUnits: bigint,
   accountCount: number,
-  signatures: string[]
+  signatures: string[],
+  split?: FeeSplit,
+  distributions?: SweepDistribution[]
 ): string {
   const txLines = signatures
     .map(
@@ -216,12 +227,29 @@ export function formatSweepLogEntry(
         `  - batch ${i + 1}: [${sig.slice(0, 8)}…](https://explorer.solana.com/tx/${sig}?cluster=devnet)`
     )
     .join("\n");
-  return (
+  let entry =
     `\n### ${dateIso} — swept ${formatPhoca(totalBaseUnits)} PHOCA\n` +
     `- Accounts holding fees: ${accountCount}\n` +
     `- Transaction${signatures.length === 1 ? "" : "s"} (${signatures.length}):\n` +
-    `${txLines}\n`
-  );
+    `${txLines}\n`;
+  if (split) {
+    entry +=
+      `- Split of the pot: charity keeps ${formatPhoca(split.charity)} · ` +
+      `community ${formatPhoca(split.community)} · ` +
+      `liquidity ${formatPhoca(split.liquidity)}\n`;
+  }
+  if (distributions && distributions.length > 0) {
+    const distLines = distributions
+      .map(
+        (d) =>
+          `  - ${d.name}: [${d.signature.slice(0, 8)}…](https://explorer.solana.com/tx/${d.signature}?cluster=devnet)`
+      )
+      .join("\n");
+    entry +=
+      `- Distribution transfers (the 2% fee applies to these too — docs/FEE-SPLIT.md):\n` +
+      `${distLines}\n`;
+  }
+  return entry;
 }
 
 /** Append a sweep entry to the transparency log, creating it (with header) on first use. */
@@ -240,6 +268,24 @@ export interface FeeSplit {
   charity: bigint;
   community: bigint;
   liquidity: bigint;
+}
+
+/**
+ * Load a named treasury wallet from keys/, creating it on first use.
+ * Devnet practice for checklist §1 "separate wallets": community and
+ * liquidity get their OWN keypairs (keys/treasury-<name>.json, git-ignored),
+ * so the split lands in genuinely separate hands — on mainnet these become
+ * multisigs with published addresses instead.
+ */
+export function loadOrCreateTreasury(name: string, dir: string = KEYS_DIR): Keypair {
+  const treasuryPath = path.join(dir, `treasury-${name}.json`);
+  if (fs.existsSync(treasuryPath)) {
+    return loadWallet(treasuryPath);
+  }
+  const keypair = Keypair.generate();
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(treasuryPath, JSON.stringify(Array.from(keypair.secretKey)));
+  return keypair;
 }
 
 /**

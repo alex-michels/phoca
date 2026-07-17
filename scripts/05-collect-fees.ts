@@ -6,11 +6,16 @@
  * script scans all PHOCA token accounts, finds the withheld crumbs, and
  * sweeps them into the charity treasury in one transaction.
  *
- * Two production-shaped behaviors are already built in:
+ * Three production-shaped behaviors are built in:
  *   - BATCHING: a Solana transaction fits only ~25 withdraw sources, so the
  *     sweep chunks the registry and sends one transaction per batch.
- *   - TRANSPARENCY LOG: every sweep auto-appends date/amount/tx links to
- *     docs/TRANSPARENCY-LOG.md — the raw feed for the monthly report.
+ *   - FEE SPLIT: the pot divides 50/25/25 (charity/community/liquidity, see
+ *     docs/FEE-SPLIT.md). Charity's share STAYS here — the collection
+ *     treasury IS the charity treasury, so the biggest share never moves and
+ *     never pays fee. The other two shares are sent onward as normal
+ *     transfers (which the chain fees at 2% — documented, converges back).
+ *   - TRANSPARENCY LOG: every sweep auto-appends date/amount/split/tx links
+ *     to docs/TRANSPARENCY-LOG.md — the raw feed for the monthly report.
  *
  * To run on a schedule: Windows Task Scheduler (or cron on Linux/Mac) calling
  * `npm run collect-fees` weekly is enough for devnet. In production the
@@ -23,20 +28,28 @@ import {
   withdrawWithheldTokensFromAccounts,
   getAccount,
   getTransferFeeAmount,
+  getMint,
+  getTransferFeeConfig,
+  calculateEpochFee,
+  transferCheckedWithFee,
 } from "@solana/spl-token";
 import * as fs from "fs";
 import {
   getConnection,
   assertDevnet,
   loadWallet,
+  loadOrCreateTreasury,
   readTokenAccounts,
   recordTokenAccount,
   formatPhoca,
   chunk,
+  splitFee,
   formatSweepLogEntry,
   appendSweepLogEntry,
+  SweepDistribution,
   MINT_PATH,
 } from "./utils";
+import { DECIMALS } from "./config";
 
 // Headroom below the ~25-account hard ceiling per transaction (tx size limit)
 const MAX_ACCOUNTS_PER_TX = 20;
@@ -116,16 +129,75 @@ async function main() {
     console.log("   Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
   }
 
-  // The sweep documents itself: date, amount, tx links → transparency log.
+  // ----- FEE SPLIT (docs/FEE-SPLIT.md) -----
+  // Charity's share stays right here in the collection treasury (no
+  // transfer → no fee). Community and liquidity get theirs as ordinary
+  // transfers — the chain withholds 2% on those too; the withheld crumbs
+  // return to the pot at the next sweep. Everything below is logged.
+  const split = splitFee(totalWithheld);
+  console.log(
+    `Split of the pot: charity keeps ${formatPhoca(split.charity)} · ` +
+      `community ${formatPhoca(split.community)} · liquidity ${formatPhoca(split.liquidity)}`
+  );
+
+  const distributions: SweepDistribution[] = [];
+  const shares = [
+    { name: "community", amount: split.community },
+    { name: "liquidity", amount: split.liquidity },
+  ];
+  if (shares.some((s) => s.amount > 0n)) {
+    // Read the live fee rule once; transferCheckedWithFee demands the exact fee.
+    const mintInfo = await getMint(connection, mint, "confirmed", TOKEN_2022_PROGRAM_ID);
+    const feeConfig = getTransferFeeConfig(mintInfo);
+    if (!feeConfig) throw new Error("This mint has no transfer fee config?!");
+    const epoch = BigInt((await connection.getEpochInfo()).epoch);
+
+    for (const { name, amount } of shares) {
+      if (amount === 0n) continue;
+      // Each non-charity treasury is its OWN wallet (created on first run,
+      // stored in keys/, git-ignored) — separate wallets, checklist §1.
+      const treasury = loadOrCreateTreasury(name);
+      const treasuryAta = await getOrCreateAssociatedTokenAccount(
+        connection, payer, mint, treasury.publicKey, false, undefined, undefined, TOKEN_2022_PROGRAM_ID
+      );
+      recordTokenAccount(treasuryAta.address.toBase58()); // registry rule
+
+      const expectedFee = calculateEpochFee(feeConfig, epoch, amount);
+      const sig = await transferCheckedWithFee(
+        connection,
+        payer,
+        charityTreasury.address,
+        mint,
+        treasuryAta.address,
+        payer,
+        amount,
+        DECIMALS,
+        expectedFee,
+        [],
+        undefined,
+        TOKEN_2022_PROGRAM_ID
+      );
+      distributions.push({ name, signature: sig });
+      console.log(
+        `✅ ${name}: sent ${formatPhoca(amount)} PHOCA ` +
+          `(receives ${formatPhoca(amount - expectedFee)} after the on-chain fee)`
+      );
+      console.log("   Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+    }
+  }
+
+  // The sweep documents itself: date, amount, split, tx links → transparency log.
   const entry = formatSweepLogEntry(
     new Date().toISOString().slice(0, 10),
     totalWithheld,
     accountsWithFees.length,
-    signatures
+    signatures,
+    split,
+    distributions
   );
   appendSweepLogEntry(entry);
 
-  console.log("✅ Charity fees collected into treasury!");
+  console.log("✅ Sweep + split complete!");
   console.log("🧾 Entry appended to docs/TRANSPARENCY-LOG.md — commit it via PR (rule 9).");
 }
 
