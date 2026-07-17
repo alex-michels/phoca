@@ -8,6 +8,23 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (Phase 2 wrap-up: sweep timer + kit decision, 2026-07-18)
+- `scripts/schedule-sweep.ps1` — registers (or removes, `-Remove`) a
+  weekly Sunday-12:00 Windows Scheduled Task running
+  `npm run collect-fees`; output to git-ignored sweep-task.log; cron
+  one-liner documented for Linux/Mac. The repo never registers system
+  tasks by itself — the owner runs this deliberately; committing the
+  transparency-log entry stays a human PR step (rule 9).
+- `docs/KIT-MIGRATION.md` — spike result with recorded decision: **GO**
+  on migrating to `@solana/kit` + `@solana-program/token-2022` (both
+  official) as the next code-heavy milestone after Phase 2 — the modern
+  zero-dependency stack removes the §8 advisory tree by construction.
+  Clean per-script rewrite (one PR each), with the localnet integration
+  CI gate as the behavior-preservation safety net. Researched against
+  live sources (linked in the doc).
+- ROADMAP Phase 2: both remaining items closed — the phase's engineering
+  scope is complete.
+
 ### Added (Phase 2 — localnet integration tests, 2026-07-18)
 - `tests/integration/localnet.test.ts` + `npm run test:integration`: the
   REAL numbered scripts 01→05 run end to end as child processes against a
