@@ -70,3 +70,13 @@ work against the real chain, not just in unit tests.
 
 Every script now verifies the cluster's genesis hash before signing anything —
 the URL can sound like devnet, the chain's fingerprint can't.
+
+### 2026-07-17 — sweep batching + auto transparency log verified
+
+1. **Transfer test** — 1,000 PHOCA → `5Svw2BmtbxHAHRePkSVejQswSA2mrF2eJAJh3XSbAFV5`:
+   980 received / 20 withheld
+   — [tx 5s6jLXA7…](https://explorer.solana.com/tx/5s6jLXA7z1jaNEqsdL8V8LoDfVYhNX2ZpCYykr9SkHDE2AXfBrbLdeiVBLNigjseiS8UEgQ6ocYeSX5Vhx6KhzpU?cluster=devnet)
+2. **Batched sweep** — 20 PHOCA collected in 1 batch, and the sweep wrote its
+   own entry into docs/TRANSPARENCY-LOG.md (first auto-logged collection;
+   lifetime total swept: 80 PHOCA)
+   — [tx ino4xWEE…](https://explorer.solana.com/tx/ino4xWEECUZNshFTvSuGCKbyhJPzQ6KXDDuk95rUtec2Z1aAt67uGX2Cgknh3fdQURPrYBhsXhyDfhega5kMFqf?cluster=devnet)

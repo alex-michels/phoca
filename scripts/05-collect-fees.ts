@@ -6,9 +6,15 @@
  * script scans all PHOCA token accounts, finds the withheld crumbs, and
  * sweeps them into the charity treasury in one transaction.
  *
- * In production you'd run this on a schedule (e.g. weekly), publish the tx
- * link in your transparency report (docs/TRANSPARENCY.md), and the withdraw
- * authority would be a multisig — not a single laptop key.
+ * Two production-shaped behaviors are already built in:
+ *   - BATCHING: a Solana transaction fits only ~25 withdraw sources, so the
+ *     sweep chunks the registry and sends one transaction per batch.
+ *   - TRANSPARENCY LOG: every sweep auto-appends date/amount/tx links to
+ *     docs/TRANSPARENCY-LOG.md — the raw feed for the monthly report.
+ *
+ * To run on a schedule: Windows Task Scheduler (or cron on Linux/Mac) calling
+ * `npm run collect-fees` weekly is enough for devnet. In production the
+ * withdraw authority is a multisig, not a single laptop key.
  */
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -26,8 +32,14 @@ import {
   readTokenAccounts,
   recordTokenAccount,
   formatPhoca,
+  chunk,
+  formatSweepLogEntry,
+  appendSweepLogEntry,
   MINT_PATH,
 } from "./utils";
+
+// Headroom below the ~25-account hard ceiling per transaction (tx size limit)
+const MAX_ACCOUNTS_PER_TX = 20;
 
 async function main() {
   const connection = getConnection();
@@ -84,21 +96,37 @@ async function main() {
   );
   recordTokenAccount(charityTreasury.address.toBase58()); // registry rule: every ATA we touch
 
-  const sig = await withdrawWithheldTokensFromAccounts(
-    connection,
-    payer,
-    mint,
-    charityTreasury.address,
-    payer, // withdrawWithheldAuthority (multisig in production!)
-    [],
-    accountsWithFees,
-    undefined,
-    TOKEN_2022_PROGRAM_ID
+  // One transaction per batch — see MAX_ACCOUNTS_PER_TX above.
+  const batches = chunk(accountsWithFees, MAX_ACCOUNTS_PER_TX);
+  const signatures: string[] = [];
+  for (let i = 0; i < batches.length; i++) {
+    const sig = await withdrawWithheldTokensFromAccounts(
+      connection,
+      payer,
+      mint,
+      charityTreasury.address,
+      payer, // withdrawWithheldAuthority (multisig in production!)
+      [],
+      batches[i],
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+    signatures.push(sig);
+    console.log(`✅ Batch ${i + 1}/${batches.length}: swept ${batches[i].length} account(s)`);
+    console.log("   Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+  }
+
+  // The sweep documents itself: date, amount, tx links → transparency log.
+  const entry = formatSweepLogEntry(
+    new Date().toISOString().slice(0, 10),
+    totalWithheld,
+    accountsWithFees.length,
+    signatures
   );
+  appendSweepLogEntry(entry);
 
   console.log("✅ Charity fees collected into treasury!");
-  console.log("Tx:", `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
-  console.log("This tx link is exactly what goes into your public transparency report. 🦭");
+  console.log("🧾 Entry appended to docs/TRANSPARENCY-LOG.md — commit it via PR (rule 9).");
 }
 
 main().catch(console.error);

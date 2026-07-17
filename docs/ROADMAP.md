@@ -57,11 +57,13 @@ story copy exists and passes the compliance wording rules; naming file updated.
 
 **Goal:** the machine does the routine work; the code gets sturdier.
 
-- [ ] Scheduled fee sweep (script 05 on a timer) that appends every sweep tx
-      to a transparency log — the habit that later becomes the monthly report
-- [ ] Sweep batching: `withdrawWithheldTokensFromAccounts` fits only ~25
-      source accounts per transaction — the automated sweep must chunk the
-      registry into batches before PHOCA has real holders (2026-07 review)
+- [ ] Scheduled fee sweep: the sweep now auto-appends every collection to
+      docs/TRANSPARENCY-LOG.md (done 2026-07-17) — remaining: put
+      `npm run collect-fees` on an actual timer (Task Scheduler/cron) and
+      commit the log entries on a cadence
+- [x] Sweep batching (2026-07-17): the sweep chunks the registry into ≤20
+      accounts per transaction (`chunk()` in utils, tested) — the ~25/tx
+      ceiling can no longer break a sweep at scale
 - [ ] Localnet integration tests (`solana-test-validator`): full
       create → mint → transfer → sweep cycle asserted in code, run in CI
 - [ ] `@solana/kit` (web3.js v2) migration spike — the tracked §8 backlog
