@@ -13,7 +13,8 @@
     "mint-supply": "tsx scripts/03-mint-supply.ts",
     "transfer-test": "tsx scripts/04-transfer-test.ts",
     "collect-fees": "tsx scripts/05-collect-fees.ts",
-    "test": "node --import=tsx --test \"tests/**/*.test.ts\"",
+    "test": "node --import=tsx --test \"tests/*.test.ts\"",
+    "test:integration": "node --import=tsx --test \"tests/integration/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "audit": "npm audit --omit=dev"
   },

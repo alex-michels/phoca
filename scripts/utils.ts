@@ -10,11 +10,19 @@ import { DECIMALS, FEE_SPLIT_BPS } from "./config";
 
 dotenv.config();
 
-export const KEYS_DIR = path.join(__dirname, "..", "keys");
+// PHOCA_KEYS_DIR / PHOCA_TRANSPARENCY_LOG exist for TEST ISOLATION only:
+// the localnet integration tests run the REAL scripts against a throwaway
+// directory and a throwaway chain, so they can never touch your actual
+// devnet wallet, mint file, registry, or the real transparency log.
+// Normal runs never set these.
+export const KEYS_DIR =
+  process.env.PHOCA_KEYS_DIR ?? path.join(__dirname, "..", "keys");
 export const WALLET_PATH = path.join(KEYS_DIR, "devnet-wallet.json");
 export const MINT_PATH = path.join(KEYS_DIR, "mint-address.txt");
 export const TOKEN_ACCOUNTS_PATH = path.join(KEYS_DIR, "token-accounts.json");
-export const TRANSPARENCY_LOG_PATH = path.join(__dirname, "..", "docs", "TRANSPARENCY-LOG.md");
+export const TRANSPARENCY_LOG_PATH =
+  process.env.PHOCA_TRANSPARENCY_LOG ??
+  path.join(__dirname, "..", "docs", "TRANSPARENCY-LOG.md");
 
 /**
  * The unforgeable fingerprint of the devnet chain. Every Solana cluster has a

@@ -31,8 +31,30 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Tests (interlock + fee math)
+      - name: Unit tests (interlock + fee math + helpers)
         run: npm test
+
+      - name: Install Solana CLI (Agave) for localnet integration tests
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Start a throwaway local validator
+        run: |
+          solana-test-validator --reset --quiet &
+          for i in $(seq 1 30); do
+            if curl -s http://127.0.0.1:8899 -X POST -H "content-type: application/json" \
+              -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}' | grep -q '"ok"'; then
+              echo "validator healthy"; exit 0
+            fi
+            sleep 2
+          done
+          echo "validator failed to start"; exit 1
+
+      # The real scripts 01→05, end to end, against the throwaway chain —
+      # skips gracefully when no validator is present (e.g. local Windows runs)
+      - name: Integration tests (full lifecycle on localnet)
+        run: npm run test:integration
 
       # Report-only: the known transitive advisories in the official Solana
       # 1.x stack are triaged in docs/SECURITY-CHECKLIST.md §8 and must not
