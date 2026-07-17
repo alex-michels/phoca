@@ -8,6 +8,22 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (Phase 2 — sweep batching + transparency log, 2026-07-17)
+- **Sweep batching**: `npm run collect-fees` now chunks the account registry
+  into ≤20 sources per transaction (Solana fits only ~25 withdraw sources
+  per tx) — one transaction per batch, all signatures reported. New pure
+  `chunk()` helper in utils.
+- **Self-documenting sweep**: every sweep auto-appends date, exact amount,
+  account count and per-batch explorer links to `docs/TRANSPARENCY-LOG.md`
+  (file self-creates with header on first sweep) — the raw feed for the
+  monthly transparency report. New `formatSweepLogEntry()` /
+  `appendSweepLogEntry()` in utils.
+- 8 new tests (46 total): chunk edge cases (remainder, empty, bad sizes),
+  log entry format, header-written-once append behavior.
+- First real log entry committed: 20 PHOCA swept 2026-07-17 on devnet.
+- Scheduling note in 05-collect-fees.ts header (Task Scheduler / cron);
+  actual timer cadence remains open in ROADMAP Phase 2.
+
 ### Added (license)
 - MIT LICENSE for code and documentation (`license: "MIT"` in package.json);
   README "License" section carves out the PHOCA name, logo and brand assets

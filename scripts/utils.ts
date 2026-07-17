@@ -14,6 +14,7 @@ export const KEYS_DIR = path.join(__dirname, "..", "keys");
 export const WALLET_PATH = path.join(KEYS_DIR, "devnet-wallet.json");
 export const MINT_PATH = path.join(KEYS_DIR, "mint-address.txt");
 export const TOKEN_ACCOUNTS_PATH = path.join(KEYS_DIR, "token-accounts.json");
+export const TRANSPARENCY_LOG_PATH = path.join(__dirname, "..", "docs", "TRANSPARENCY-LOG.md");
 
 /**
  * The unforgeable fingerprint of the devnet chain. Every Solana cluster has a
@@ -169,6 +170,70 @@ export function loadWallet(walletPath: string = WALLET_PATH): Keypair {
         "On devnet: delete it and run `npm run wallet` to create a fresh one."
     );
   }
+}
+
+/**
+ * Split a list into chunks of at most `size` items, preserving order.
+ *
+ * Why it exists: a Solana transaction has a hard size limit (~1232 bytes),
+ * and withdrawWithheldTokensFromAccounts fits only ~25 source accounts per
+ * transaction. So the fee sweep processes the registry in batches. Pure
+ * function — tested in tests/utils.test.ts.
+ */
+export function chunk<T>(items: T[], size: number): T[][] {
+  if (!Number.isInteger(size) || size < 1) {
+    throw new Error(`chunk size must be a positive integer, got ${size}`);
+  }
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    out.push(items.slice(i, i + size));
+  }
+  return out;
+}
+
+const TRANSPARENCY_LOG_HEADER = `# 🧾 PHOCA transparency log (auto-appended)
+
+Every fee sweep appends an entry here automatically: date, total collected,
+how many accounts held fees, and the transaction link(s) — the raw feed for
+the monthly transparency report (docs/TRANSPARENCY.md). Entries are written
+by \`npm run collect-fees\` and committed via PR like everything else.
+Do not edit entries by hand — the unbroken history IS the point.
+`;
+
+/**
+ * Render one sweep as a markdown log entry. Pure function (tested).
+ * Explorer links carry ?cluster=devnet — that suffix goes away on mainnet.
+ */
+export function formatSweepLogEntry(
+  dateIso: string,
+  totalBaseUnits: bigint,
+  accountCount: number,
+  signatures: string[]
+): string {
+  const txLines = signatures
+    .map(
+      (sig, i) =>
+        `  - batch ${i + 1}: [${sig.slice(0, 8)}…](https://explorer.solana.com/tx/${sig}?cluster=devnet)`
+    )
+    .join("\n");
+  return (
+    `\n### ${dateIso} — swept ${formatPhoca(totalBaseUnits)} PHOCA\n` +
+    `- Accounts holding fees: ${accountCount}\n` +
+    `- Transaction${signatures.length === 1 ? "" : "s"} (${signatures.length}):\n` +
+    `${txLines}\n`
+  );
+}
+
+/** Append a sweep entry to the transparency log, creating it (with header) on first use. */
+export function appendSweepLogEntry(
+  entry: string,
+  logPath: string = TRANSPARENCY_LOG_PATH
+): void {
+  if (!fs.existsSync(logPath)) {
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    fs.writeFileSync(logPath, TRANSPARENCY_LOG_HEADER);
+  }
+  fs.appendFileSync(logPath, entry);
 }
 
 /**

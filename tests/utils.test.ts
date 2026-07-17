@@ -23,6 +23,9 @@ import {
   loadWallet,
   readTokenAccounts,
   recordTokenAccount,
+  chunk,
+  formatSweepLogEntry,
+  appendSweepLogEntry,
   DEVNET_GENESIS_HASH,
 } from "../scripts/utils";
 import { ONE_PHOCA } from "../scripts/config";
@@ -178,6 +181,63 @@ describe("assertDevnet — the chain-fingerprint check", () => {
   test("the explicit override skips the check (same override as the URL interlock)", async () => {
     process.env.I_UNDERSTAND_THIS_IS_NOT_DEVNET = "true";
     await assertDevnet(fakeConnection("https://api.mainnet-beta.solana.com", "WrongHash"));
+  });
+});
+
+describe("chunk — batching for the fee sweep", () => {
+  test("splits with a remainder chunk at the end, order preserved", () => {
+    assert.deepEqual(chunk([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
+  });
+
+  test("exact multiples produce equal chunks", () => {
+    assert.deepEqual(chunk(["a", "b", "c", "d"], 2), [["a", "b"], ["c", "d"]]);
+  });
+
+  test("a list smaller than the chunk size stays whole", () => {
+    assert.deepEqual(chunk([1, 2], 20), [[1, 2]]);
+  });
+
+  test("empty list → no batches (the sweep sends zero transactions)", () => {
+    assert.deepEqual(chunk([], 20), []);
+  });
+
+  test("nonsense sizes are rejected loudly", () => {
+    assert.throws(() => chunk([1], 0), /positive integer/);
+    assert.throws(() => chunk([1], -3), /positive integer/);
+    assert.throws(() => chunk([1], 2.5), /positive integer/);
+  });
+});
+
+describe("transparency log", () => {
+  test("a sweep entry carries date, exact amount, account count and one link per batch", () => {
+    const entry = formatSweepLogEntry("2026-07-12", 60n * ONE_PHOCA, 3, ["SigOne111", "SigTwo222"]);
+    assert.match(entry, /### 2026-07-12 — swept 60 PHOCA/);
+    assert.match(entry, /Accounts holding fees: 3/);
+    assert.match(entry, /Transactions \(2\):/);
+    assert.match(entry, /batch 1: \[SigOne11…\]\(https:\/\/explorer\.solana\.com\/tx\/SigOne111\?cluster=devnet\)/);
+    assert.match(entry, /batch 2: \[SigTwo22…\]/);
+  });
+
+  test("single-batch sweeps read grammatically ('Transaction (1)')", () => {
+    const entry = formatSweepLogEntry("2026-07-12", 20n * ONE_PHOCA, 1, ["OnlySig"]);
+    assert.match(entry, /Transaction \(1\):/);
+  });
+
+  test("appending creates the file with its header ONCE, then only appends", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "phoca-translog-"));
+    const logPath = path.join(dir, "TRANSPARENCY-LOG.md");
+    try {
+      appendSweepLogEntry("\n### first entry\n", logPath);
+      appendSweepLogEntry("\n### second entry\n", logPath);
+      const content = fs.readFileSync(logPath, "utf-8");
+      const headerCount = content.split("PHOCA transparency log").length - 1;
+      assert.equal(headerCount, 1, "header must appear exactly once");
+      assert.match(content, /first entry/);
+      assert.match(content, /second entry/);
+      assert.ok(content.indexOf("first entry") < content.indexOf("second entry"));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
