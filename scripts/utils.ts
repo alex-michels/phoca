@@ -6,7 +6,7 @@ import { Connection, Keypair } from "@solana/web3.js";
 import * as fs from "fs";
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { DECIMALS } from "./config";
+import { DECIMALS, FEE_SPLIT_BPS } from "./config";
 
 dotenv.config();
 
@@ -234,6 +234,32 @@ export function appendSweepLogEntry(
     fs.writeFileSync(logPath, TRANSPARENCY_LOG_HEADER);
   }
   fs.appendFileSync(logPath, entry);
+}
+
+export interface FeeSplit {
+  charity: bigint;
+  community: bigint;
+  liquidity: bigint;
+}
+
+/**
+ * Split a swept fee pot into the three treasuries per FEE_SPLIT_BPS.
+ *
+ * Integer math can't always divide exactly — 101 base units × 25% is 25.25.
+ * Policy: community and liquidity round DOWN, and charity takes everything
+ * that's left. Every rounding crumb goes to the seals, by design, and the
+ * three parts ALWAYS sum to exactly the input — that invariant is tested
+ * hard, because "almost adds up" is how treasuries leak.
+ * See docs/FEE-SPLIT.md for the full design.
+ */
+export function splitFee(totalBaseUnits: bigint): FeeSplit {
+  if (totalBaseUnits < 0n) {
+    throw new Error(`splitFee: negative amount ${totalBaseUnits}`);
+  }
+  const community = (totalBaseUnits * BigInt(FEE_SPLIT_BPS.community)) / 10_000n;
+  const liquidity = (totalBaseUnits * BigInt(FEE_SPLIT_BPS.liquidity)) / 10_000n;
+  const charity = totalBaseUnits - community - liquidity;
+  return { charity, community, liquidity };
 }
 
 /**

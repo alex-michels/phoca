@@ -34,3 +34,15 @@ export const MAX_FEE = 5_000n * ONE_PHOCA;
 
 /** Fixed total supply: 1 billion PHOCA. Mint authority revoked after minting. */
 export const TOTAL_SUPPLY = 1_000_000_000n * ONE_PHOCA;
+
+/**
+ * How the collected fee pot is split, in basis points OF THE POT (not of the
+ * transfer). TOKENOMICS.md promises 1% / 0.5% / 0.5% of every transfer;
+ * the on-chain fee collects the whole 2% into ONE pot, so at sweep time the
+ * pot divides 50% / 25% / 25%. Must sum to exactly 10_000 — tested.
+ */
+export const FEE_SPLIT_BPS = {
+  charity: 5_000,   // 50% of the pot = 1.0% of each transfer
+  community: 2_500, // 25% of the pot = 0.5% of each transfer
+  liquidity: 2_500, // 25% of the pot = 0.5% of each transfer
+} as const;
