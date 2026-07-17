@@ -64,8 +64,11 @@ story copy exists and passes the compliance wording rules; naming file updated.
 - [x] Sweep batching (2026-07-17): the sweep chunks the registry into ≤20
       accounts per transaction (`chunk()` in utils, tested) — the ~25/tx
       ceiling can no longer break a sweep at scale
-- [ ] Localnet integration tests (`solana-test-validator`): full
-      create → mint → transfer → sweep cycle asserted in code, run in CI
+- [x] Localnet integration tests (2026-07-18): the REAL scripts 01→05 run
+      end to end on `solana-test-validator` in CI on every PR — script
+      output AND on-chain state asserted (fee rule, freeze=null, 980/20,
+      split 10/5/5, log entry). Isolated via PHOCA_KEYS_DIR; skips politely
+      without a validator
 - [ ] `@solana/kit` (web3.js v2) migration spike — the tracked §8 backlog
       item; the modern stack drops the vulnerable transitive deps 🔎
 - [x] Fee split — design, math AND wiring (2026-07-18): docs/FEE-SPLIT.md.

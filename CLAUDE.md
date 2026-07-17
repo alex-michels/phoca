@@ -28,6 +28,8 @@ as the owner's textbook.
 - `npm run transfer-test` — demo transfer showing the charity fee being withheld
 - `npm run collect-fees` — sweep withheld fees into the charity treasury
 - `npm test` — interlock + fee-math test suite; must be green after every code edit
+- `npm run test:integration` — real scripts 01→05 on a local validator; skips
+  without one (CI runs it on every PR)
 - `npm run typecheck` — must be clean after every code edit
 - `npm run audit` — dependency check; NEVER `npm audit fix --force` (see SECURITY-CHECKLIST §8)
 

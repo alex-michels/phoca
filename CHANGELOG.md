@@ -8,6 +8,22 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (Phase 2 — localnet integration tests, 2026-07-18)
+- `tests/integration/localnet.test.ts` + `npm run test:integration`: the
+  REAL numbered scripts 01→05 run end to end as child processes against a
+  throwaway `solana-test-validator` chain. Asserts script output AND
+  on-chain truth (fee rule read from the mint = config, freeze authority
+  null, 980/20 transfer arithmetic, 10/5/5 split with 4.9 received,
+  self-written transparency-log entry, both treasuries created).
+- Test isolation env overrides in utils (`PHOCA_KEYS_DIR`,
+  `PHOCA_TRANSPARENCY_LOG`) — integration runs can never touch the real
+  devnet wallet, registry, or transparency log. Normal runs never set them.
+- CI now installs the Solana CLI (Agave), boots a local validator and runs
+  the integration suite on every PR; without a validator the suite skips
+  politely (green), so it's always safe to run locally.
+- `npm test` narrowed to unit suites (tests/*.test.ts); ROADMAP Phase 2
+  integration item closed; README/CLAUDE.md commands updated.
+
 ### Added (Phase 2 — fee-split wiring, 2026-07-18)
 - **The sweep now splits and distributes**: after collecting the pot,
   `npm run collect-fees` keeps charity's 50% in the collection treasury

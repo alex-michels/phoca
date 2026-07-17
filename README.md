@@ -79,13 +79,17 @@ Mainnet is a deliberate, later decision — see `docs/ROADMAP.md`.
 ## Tests
 
 ```bash
-npm test           # interlock + fee-math suites (no network needed)
-npm run typecheck  # TypeScript must be clean
+npm test                  # unit: interlock + fee math + helpers (no network)
+npm run test:integration  # the REAL scripts 01→05 on a local validator
+npm run typecheck         # TypeScript must be clean
 ```
 
-The most important tests guard the **non-devnet interlock** — the code that
-refuses to run these scripts against real money. If those tests fail, stop and
-find out why before running anything else. CI runs both checks on every push.
+The most important unit tests guard the **non-devnet interlock** — the code
+that refuses to run these scripts against real money. The integration test
+runs the actual numbered scripts end to end against a throwaway local chain
+(`solana-test-validator`) in an isolated temp directory — it skips politely
+if no validator is running, and CI runs it on every PR. If tests fail, stop
+and find out why before running anything else.
 
 ## Security & compliance posture
 
