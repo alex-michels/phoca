@@ -57,10 +57,11 @@ story copy exists and passes the compliance wording rules; naming file updated.
 
 **Goal:** the machine does the routine work; the code gets sturdier.
 
-- [ ] Scheduled fee sweep: the sweep now auto-appends every collection to
-      docs/TRANSPARENCY-LOG.md (done 2026-07-17) — remaining: put
-      `npm run collect-fees` on an actual timer (Task Scheduler/cron) and
-      commit the log entries on a cadence
+- [x] Scheduled fee sweep (2026-07-18): auto-logging done 2026-07-17;
+      timer tool shipped — `scripts/schedule-sweep.ps1` registers a weekly
+      Sunday-12:00 Task Scheduler job (owner runs it deliberately; cron
+      one-liner documented for Linux/Mac). Committing the log entry stays
+      a human PR step by design (rule 9)
 - [x] Sweep batching (2026-07-17): the sweep chunks the registry into ≤20
       accounts per transaction (`chunk()` in utils, tested) — the ~25/tx
       ceiling can no longer break a sweep at scale
@@ -69,8 +70,11 @@ story copy exists and passes the compliance wording rules; naming file updated.
       output AND on-chain state asserted (fee rule, freeze=null, 980/20,
       split 10/5/5, log entry). Isolated via PHOCA_KEYS_DIR; skips politely
       without a validator
-- [ ] `@solana/kit` (web3.js v2) migration spike — the tracked §8 backlog
-      item; the modern stack drops the vulnerable transitive deps 🔎
+- [x] `@solana/kit` migration spike (2026-07-18): decision recorded in
+      docs/KIT-MIGRATION.md — **GO**, as the next code-heavy milestone
+      after Phase 2 (clean per-script rewrite to `@solana/kit` +
+      `@solana-program/token-2022`, localnet CI gate as the safety net);
+      Phase 5 backstop unchanged
 - [x] Fee split — design, math AND wiring (2026-07-18): docs/FEE-SPLIT.md.
       The sweep now splits the pot 50/25/25 and distributes to separate
       auto-generated devnet treasuries; fee-on-fee observed live exactly
