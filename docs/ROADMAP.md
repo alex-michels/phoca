@@ -68,9 +68,10 @@ story copy exists and passes the compliance wording rules; naming file updated.
       create → mint → transfer → sweep cycle asserted in code, run in CI
 - [ ] `@solana/kit` (web3.js v2) migration spike — the tracked §8 backlog
       item; the modern stack drops the vulnerable transitive deps 🔎
-- [ ] Fee split implementation plan: TransferFee gives ONE withheld pot;
-      the 1%/0.5%/0.5% split from TOKENOMICS happens at sweep time —
-      design + test the split math before mainnet
+- [x] Fee split design + math (2026-07-18): docs/FEE-SPLIT.md — split at
+      sweep time, crumbs to charity, sum-invariant tested; fee-on-fee
+      effect documented. Remaining: wire distribution into the sweep
+      (needs treasury-address decision — see FEE-SPLIT.md "What's next")
 
 **Exit criteria:** zero-touch weekly sweep on devnet with auto-updated log;
 integration tests green in CI; kit-migration decision written down (go/no-go + when).

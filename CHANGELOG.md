@@ -8,6 +8,20 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (Phase 2 — fee-split design + math, 2026-07-18)
+- `docs/FEE-SPLIT.md` — full design for turning the single on-chain fee pot
+  into the promised 1% / 0.5% / 0.5% split at sweep time: rounding policy
+  (crumbs to charity), the counterintuitive fee-on-fee effect on
+  distribution transfers (documented with a worked example — it converges
+  in charity's favor and stays fully visible on-chain), and the treasury
+  model per stage (separate devnet wallets → three multisigs on mainnet).
+- `FEE_SPLIT_BPS` in scripts/config.ts (single source of truth, must sum
+  to 10,000 — tested) and pure `splitFee()` in utils with hard invariants:
+  parts always sum exactly to the pot; charity never below its 50%; tiny
+  pots go to charity; negatives rejected. 8 new tests (54 total).
+- TOKENOMICS.md and README point to the design doc. On-chain distribution
+  wiring is the next PR (needs the treasury-address decision).
+
 ### Added (Phase 2 — sweep batching + transparency log, 2026-07-17)
 - **Sweep batching**: `npm run collect-fees` now chunks the account registry
   into ≤20 sources per transaction (Solana fits only ~25 withdraw sources

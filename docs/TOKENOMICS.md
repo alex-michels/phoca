@@ -17,6 +17,10 @@ seal rescue centers, marine mammal research and ocean protection.
 - 0.5% → Community/marketing treasury
 - 0.5% → Liquidity support
 
+Mechanics, rounding policy and the fee-on-fee effect: **docs/FEE-SPLIT.md**
+(the split happens at sweep time — the chain collects the 2% as one pot).
+Split constants live in `scripts/config.ts` (`FEE_SPLIT_BPS`), tested.
+
 ## Draft allocation
 - 60% Liquidity pool (locked — publish the lock link)
 - 15% Community: airdrops to seal communities, contests, artists
