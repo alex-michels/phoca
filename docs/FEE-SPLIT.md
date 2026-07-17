@@ -1,7 +1,8 @@
 # 💰 Fee-split design: one on-chain pot → three treasuries
 
-**Status: design + tested math (this doc). On-chain distribution wiring is
-the next step and needs a treasury-address decision — see "What's next".**
+**Status: IMPLEMENTED (2026-07-18) — `npm run collect-fees` sweeps, splits
+and distributes in one run, and logs every step to the transparency log.
+Verified live on devnet.**
 
 ## The problem
 
@@ -60,8 +61,13 @@ document it instead of hiding it: honest arithmetic is the brand.
 
 | Stage | Collection/charity | Community | Liquidity |
 |---|---|---|---|
-| Devnet (next PR) | current dev wallet's ATA (unchanged) | separate devnet wallet | separate devnet wallet |
+| Devnet (live) | dev wallet's ATA (unchanged) | auto-generated wallet (`keys/treasury-community.json`) | auto-generated wallet (`keys/treasury-liquidity.json`) |
 | Mainnet (Phase 5) | multisig | multisig | multisig |
+
+Treasury wallets are created on first sweep by `loadOrCreateTreasury()`
+(tested) and live in `keys/` — git-ignored like every key. Their ATAs are
+recorded in the sweep registry, so their own future withheld crumbs get
+swept too.
 
 Separate wallets on devnet practice checklist §1 ("separate wallets")
 before it matters. All three mainnet treasuries are Squads multisigs with
@@ -69,13 +75,17 @@ published addresses (§2), and the whole flow — sweep → split → three
 balances — must be readable by anyone from the transparency log plus an
 explorer.
 
-## What's next (the wiring PR)
+## First live run (2026-07-18, devnet)
 
-1. Owner decision: auto-generate two extra devnet wallets into `keys/`
-   (recommended — zero setup), or use owner-provided addresses.
-2. `05-collect-fees.ts` gains a distribution step after the sweep:
-   `splitFee(total)` → `transferCheckedWithFee` of the community and
-   liquidity shares; all three resulting amounts + tx links go into the
-   transparency log entry (formatter extends).
-3. The registry records the two new treasury ATAs (registry completeness
-   rule), so their own future withheld crumbs are swept too.
+Pot of 20 PHOCA → charity kept 10 (no transfer, no fee); community and
+liquidity were each sent 5 and received **4.9** — the fee-on-fee effect
+from the worked example, observed on-chain exactly as predicted. The 0.2
+withheld on those transfers returns at the next sweep. Tx links in
+docs/TRANSPARENCY-LOG.md (the sweep wrote its own entry).
+
+## What's next
+
+- Mainnet (Phase 5): the three treasuries become Squads multisigs with
+  published addresses; this mechanism is otherwise unchanged.
+- The scheduled-sweep cadence (ROADMAP Phase 2) makes this fully
+  zero-touch: timer → sweep → split → log.

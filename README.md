@@ -68,7 +68,8 @@ npm run mint-supply
 # 5. Watch the charity fee work: send tokens and see the fee withheld on-chain
 npm run transfer-test
 
-# 6. Sweep the withheld fees into the charity treasury (your first transparency-report tx!)
+# 6. Sweep the withheld fees, split the pot (50% charity / 25% community /
+#    25% liquidity — see docs/FEE-SPLIT.md) and log it all automatically
 npm run collect-fees
 ```
 

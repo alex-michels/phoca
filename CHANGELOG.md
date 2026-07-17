@@ -8,6 +8,24 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (Phase 2 — fee-split wiring, 2026-07-18)
+- **The sweep now splits and distributes**: after collecting the pot,
+  `npm run collect-fees` keeps charity's 50% in the collection treasury
+  (no transfer → no fee), and sends the 25% community and 25% liquidity
+  shares to their own treasuries via `transferCheckedWithFee`. Verified
+  live on devnet: pot of 20 → charity kept 10, each share sent 5 /
+  received 4.9 — the documented fee-on-fee effect observed on-chain.
+- `loadOrCreateTreasury()` in utils: community and liquidity treasuries
+  are separate auto-generated wallets (`keys/treasury-*.json`, git-ignored,
+  created on first sweep) — checklist §1 "separate wallets" in practice.
+  Their ATAs are recorded in the sweep registry.
+- Transparency log entries now include the split amounts and one link per
+  distribution transfer (`formatSweepLogEntry` extended, backward
+  compatible). 4 new tests (58 total).
+- FEE-SPLIT.md updated to IMPLEMENTED with the first live run; ROADMAP
+  Phase 2 fee-split item closed; README quickstart step 6 reflects
+  sweep+split+log.
+
 ### Added (Phase 2 — fee-split design + math, 2026-07-18)
 - `docs/FEE-SPLIT.md` — full design for turning the single on-chain fee pot
   into the promised 1% / 0.5% / 0.5% split at sweep time: rounding policy
