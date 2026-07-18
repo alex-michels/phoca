@@ -13,7 +13,9 @@ seal rescue centers, marine mammal research and ocean protection.
 | Fee cap | 5,000 tokens/transfer | Protects whales from absurd absolute fees |
 
 ## Where the 2% goes (draft split)
-- 1.0% → Charity treasury (seal rescue orgs — named publicly, receipts published)
+- 1.0% → Charity treasury — pinniped rescue first; categories & selection
+  criteria in **docs/CHARITY-POLICY.md** (deliberately no fixed org list;
+  every donation published with tx link + confirmation)
 - 0.5% → Community/marketing treasury
 - 0.5% → Liquidity support
 

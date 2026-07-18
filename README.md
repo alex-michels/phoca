@@ -38,6 +38,7 @@ Earth — exactly the kind of animal this project exists to help.
 | `CHANGELOG.md` | Every change, documented in the same commit that makes it |
 | `docs/LEARNING-ROADMAP.md` | Your step-by-step path from beginner to senior blockchain dev |
 | `docs/TOKENOMICS.md` | Draft token design: supply, charity fee, wallets |
+| `docs/CHARITY-POLICY.md` | Who the fees help and how recipients are chosen (categories, not a fixed list) |
 | `docs/FEE-SPLIT.md` | How the 2% pot divides into three treasuries: math, rounding, fee-on-fee |
 | `docs/SECURITY-CHECKLIST.md` | The list that keeps you from getting rekt |
 | `docs/LEGAL-NOTES.md` | Naming status + EU/MiCA notes (talk to a real lawyer!) |

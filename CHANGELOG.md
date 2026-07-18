@@ -52,6 +52,20 @@ rather than versioned until the first tagged release.
 - CLAUDE.md tech-stack line, KIT-MIGRATION.md (EXECUTED), ROADMAP Phase 5
   gate note updated.
 
+### Added (Phase 1 — charity policy, 2026-07-18)
+- `docs/CHARITY-POLICY.md` — the charity-focus decision (owner's call):
+  CATEGORIES instead of a fixed organization list. Focus: pinnipeds —
+  seals, sea lions and fur seals — rescue first, from spontaneous
+  disentanglement projects (e.g. debris-entangled fur seals off Namibia)
+  to rehabilitation centers in the EU and worldwide; then research and
+  habitat protection. Rationale documented (needs are spontaneous; naming
+  creates false expectations; no org named without written agreement).
+  Five selection criteria (verifiable, direct pinniped impact, clean
+  funds path, confirmable, zero conflicts of interest) and per-donation
+  accountability: tx link + written rationale + recipient confirmation.
+- TOKENOMICS charity line now points to the policy; ROADMAP Phase 1
+  charity item closed (only the logo PNG export remains in Phase 1).
+
 ### Added (Phase 2 wrap-up: sweep timer + kit decision, 2026-07-18)
 - `scripts/schedule-sweep.ps1` — registers (or removes, `-Remove`) a
   weekly Sunday-12:00 Windows Scheduled Task running
