@@ -90,11 +90,16 @@ integration tests green in CI; kit-migration decision written down (go/no-go + w
 (Planned in this phase, built when Phase 1–2 are done.)
 
 Web portal, in three steps:
-1. **Official-links page** (single static page, GitHub Pages): the canonical
-   list of every official channel + "we will NEVER DM you first" — this
-   page exists BEFORE any social channel does (SECURITY-CHECKLIST §5)
-2. **Landing site**: story, tokenomics table, devnet status disclaimer,
-   compliance-safe wording only
+1. **Official-links page** — BUILT 2026-07-18 (as a section of `site/index.html`):
+   canonical channel list (currently: GitHub + the page itself, nothing
+   else exists), "we will NEVER DM you first", mint-address-is-the-only-
+   identifier warning — exists BEFORE any social channel does (§5) ✓
+2. **Landing site** — BUILT 2026-07-18 (`site/index.html`, zero-JS static
+   page): Phocaea story, what-PHOCA-is/is-not with risk statement, draft
+   tokenomics table, devnet banner — wording from docs/BRAND-STORY.md
+   (COMPLIANCE-EU Phase C rules). Deploy workflow ready
+   (`.github/workflows/pages.yml`); GOING LIVE is the owner's deliberate
+   step: Settings → Pages → Source: GitHub Actions
 3. **Transparency dashboard**: reads on-chain data live — withheld fees,
    sweeps, treasury balances; the "don't trust, verify" page
 

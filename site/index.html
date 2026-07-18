@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHOCA — the seal coin, 2600 years in the making</title>
+<meta name="description" content="PHOCA: a community & charity token project on Solana devnet. Part of every transfer fee is withheld on-chain for seal rescue and marine mammal protection. Learning project — nothing is for sale.">
+<link rel="icon" type="image/svg+xml" href="phoca-logo.svg">
+<style>
+  :root {
+    --gold: #EDC45F; --gold-deep: #B8860B; --bronze: #3A2905; --bronze-soft: #5C4408;
+    --ocean: #2E7DB2; --bg: #FDF9F0; --card: #FFFFFF; --text: #2A2214; --muted: #6B5D42;
+    --border: #E8DCC0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #17130B; --card: #221C10; --text: #F0E6D0; --muted: #B5A582; --border: #3A311D; }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .banner { background: var(--bronze); color: #F7DC85; text-align: center; padding: 10px 16px; font-size: 15px; font-family: system-ui, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+  header { text-align: center; padding: 56px 0 40px; }
+  header img { width: 180px; height: 180px; }
+  h1 { font-size: 44px; letter-spacing: 2px; margin: 18px 0 6px; color: var(--gold-deep); }
+  @media (prefers-color-scheme: dark) { h1 { color: var(--gold); } }
+  .tagline { font-size: 20px; font-style: italic; color: var(--muted); }
+  section { margin: 44px 0; }
+  h2 { font-size: 26px; margin-bottom: 14px; border-bottom: 2px solid var(--gold); padding-bottom: 6px; }
+  p { margin: 12px 0; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px 26px; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-family: system-ui, sans-serif; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; }
+  a { color: var(--ocean); }
+  @media (prefers-color-scheme: dark) { a { color: #7FB8DC; } }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; word-break: break-all; }
+  .warn { border-left: 4px solid var(--gold-deep); border-radius: 0; }
+  ul { padding-left: 22px; } li { margin: 8px 0; }
+  footer { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 0 56px; font-family: system-ui, sans-serif; }
+  .never { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  ⚠️ Learning project on Solana <strong>devnet</strong> (test network). Nothing is deployed to mainnet.
+  Nothing is for sale. Nothing here is an offer. Not financial advice.
+</div>
+
+<div class="wrap">
+
+<header>
+  <img src="phoca-logo.svg" alt="PHOCA logo: a gold coin with an engraved smiling seal face">
+  <h1>PHOCA</h1>
+  <p class="tagline">The seal coin, 2,600 years in the making</p>
+</header>
+
+<section>
+  <h2>The first seal coin was minted 2,600 years ago</h2>
+  <p><em>Phṓkē</em> (φώκη) is the ancient Greek word for seal. <em>Phoca</em> is the Latin name
+  science still uses for the genus of true seals — <em>Phoca vitulina</em>, the harbor seal,
+  lives along Europe's North Sea and Baltic coasts today.</p>
+  <p>The Greek city of <strong>Phocaea</strong> — "seal city," on the Aegean coast of today's
+  Türkiye — was among the first places in the world to mint coins, around 600&nbsp;BC.
+  Its coins were stamped with the city's badge: <strong>a seal</strong>. A Phocaean coin from
+  600–550&nbsp;BC sits in the British Museum. The Phocaeans were legendary sailors — they
+  founded Marseille around 600&nbsp;BC, and Herodotus credits them with pioneering the long
+  sea voyages of their age.</p>
+  <p>Some of Phocaea's coins depict what today is identified with the Mediterranean monk
+  seal — now one of the most endangered marine mammals on Earth. The animal that once
+  symbolized a city's money now needs help surviving. That is the gap PHOCA exists to
+  help close.</p>
+  <p><strong>The first seal coin was minted 2,600 years ago. PHOCA is the next one —
+  this time, for the seals themselves.</strong></p>
+</section>
+
+<section>
+  <h2>What PHOCA is</h2>
+  <p>PHOCA is a community token project on Solana for seal lovers worldwide — and a funding
+  mechanism for seal rescue and marine mammal protection that does not depend on anyone's
+  promise:</p>
+  <ul>
+    <li>PHOCA uses Solana's Token-2022 standard with a built-in <strong>transfer fee</strong>.
+    On every transfer, the blockchain itself withholds a small percentage — this rule is
+    enforced by the token program, not by the team.</li>
+    <li>Withheld fees can only be collected by the designated treasury authority, and every
+    collection is a public, permanently visible transaction — see the
+    <a href="https://github.com/alex-michels/phoca/blob/main/docs/TRANSPARENCY-LOG.md">live transparency log</a>,
+    written automatically by the collection script itself.</li>
+    <li>Our commitment: fee proceeds fund seal rescue centers, marine mammal research and
+    ocean protection, with every donation published as an on-chain transaction link plus
+    the organization's confirmation. We name partner organizations only with their written
+    agreement.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="card warn">
+    <h2 style="border:none; padding:0;">What PHOCA is not</h2>
+    <ul>
+      <li>PHOCA is <strong>not an investment</strong>. It grants no claim to profit, dividends,
+      revenue, or the charity funds. Nobody — including us — should acquire PHOCA expecting
+      financial return.</li>
+      <li>Crypto-assets are volatile and can lose all value. Never spend money you cannot
+      afford to lose.</li>
+      <li>PHOCA is not a stablecoin and is not pegged to anything.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Draft tokenomics (nothing final until launch gates pass)</h2>
+  <table>
+    <tr><th>Parameter</th><th>Draft value</th></tr>
+    <tr><td>Total supply</td><td>1,000,000,000 PHOCA — fixed; mint authority to be revoked</td></tr>
+    <tr><td>Transfer fee</td><td>2% (capped at 5,000 PHOCA per transfer), enforced on-chain</td></tr>
+    <tr><td>Fee split</td><td>1% charity · 0.5% community · 0.5% liquidity — <a href="https://github.com/alex-michels/phoca/blob/main/docs/FEE-SPLIT.md">mechanics &amp; math</a></td></tr>
+    <tr><td>Freeze authority</td><td>None, by design — nobody can ever freeze holders</td></tr>
+  </table>
+  <p>The full design, security checklist and EU-compliance workstream are public in the
+  repository — <a href="https://github.com/alex-michels/phoca/blob/main/docs/ROADMAP.md">the
+  roadmap is the marketing</a>.</p>
+</section>
+
+<section>
+  <h2>Official links — verify, don't trust</h2>
+  <div class="card">
+    <ul>
+      <li><strong>GitHub (the project home):</strong>
+        <a href="https://github.com/alex-michels/phoca">github.com/alex-michels/phoca</a></li>
+      <li><strong>Devnet mint address</strong> (test network, holds no value):<br>
+        <code>BjEPXiw8jKMdRAxyhoVdcszHGCfWXaBSANqXhzzw6bux</code><br>
+        <a href="https://explorer.solana.com/address/BjEPXiw8jKMdRAxyhoVdcszHGCfWXaBSANqXhzzw6bux?cluster=devnet">view in Solana Explorer</a></li>
+      <li><strong>Transparency log:</strong>
+        <a href="https://github.com/alex-michels/phoca/blob/main/docs/TRANSPARENCY-LOG.md">every fee collection, auto-logged</a></li>
+    </ul>
+  </div>
+  <div class="card warn">
+    <p class="never">We will NEVER send you a direct message first. We will never ask for
+    your seed phrase, keys, or money.</p>
+    <p>Right now the GitHub repository and this page are the <strong>only</strong> official
+    PHOCA channels. There is no Telegram, no Discord, no X account, and no token on sale —
+    anyone claiming otherwise is a scammer. Token names on Solana are not unique: the only
+    real identifier is the mint address above.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Code &amp; docs: <a href="https://github.com/alex-michels/phoca/blob/main/LICENSE">MIT license</a>.
+  The PHOCA name and logo are not MIT-licensed — all rights reserved (anti-scam measure).</p>
+  <p>© 2026 PHOCA project · built in public, on devnet, for the seals 🦭</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -45,6 +45,7 @@ Earth — exactly the kind of animal this project exists to help.
 | `docs/TRANSPARENCY.md` | Monthly charity transparency report template |
 | `docs/TRANSPARENCY-LOG.md` | **Auto-appended** by every fee sweep: date, amount, tx links |
 | `docs/DEVNET-LOG.md` | Log of devnet runs: addresses + tx links (transparency-report practice) |
+| `site/` | The public landing + official-links page (zero-JS static, GitHub Pages) |
 | `scripts/` | Small TypeScript scripts, numbered in the order you run them |
 | `tests/` | Test suite: the non-devnet interlock and the charity-fee math |
 | `keys/` | Local wallets for **devnet only** — git-ignored, never commit keys |

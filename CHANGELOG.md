@@ -8,6 +8,23 @@ rather than versioned until the first tagged release.
 
 ## [Unreleased]
 
+### Added (Phase 3 — landing site + official-links page, 2026-07-18)
+- `site/index.html` — the public face: zero-JS, self-contained static
+  page (no external resources = nothing to compromise). Sections: devnet
+  banner ("nothing is for sale"), the Phocaea story, what PHOCA is /
+  is not (risk statement per COMPLIANCE-EU Phase C, wording from
+  BRAND-STORY.md), draft tokenomics table, and the SECURITY-CHECKLIST §5
+  official-links section — "we will NEVER DM you first", GitHub + this
+  page are the only channels, the mint address is the only real
+  identifier. Light/dark mode; gold seal logo as favicon and hero.
+- `.github/workflows/pages.yml` — deploys `site/` to GitHub Pages on
+  changes to main (least-privilege permissions, concurrency-guarded).
+  Going live is the owner's deliberate step: Settings → Pages → Source:
+  GitHub Actions. Verified locally by serving `site/` and checking the
+  rendered content.
+- ROADMAP Phase 3 items 1–2 marked built; README repo table lists
+  `site/`.
+
 ### Changed (kit migration, 2026-07-18)
 - **Migrated the entire stack** from `@solana/web3.js` 1.x +
   `@solana/spl-token` to `@solana/kit@7.0.0` +
