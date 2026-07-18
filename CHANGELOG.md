@@ -83,6 +83,17 @@ rather than versioned until the first tagged release.
 - ROADMAP Phase 2: both remaining items closed — the phase's engineering
   scope is complete.
 
+### Added (Phase 1 — logo PNG export, 2026-07-18)
+- `assets/phoca-logo-512.png` — 512×512 RGBA (transparent corners) export
+  of the gold seal-coin logo, rendered from the SVG master via headless
+  Chrome (zero new dependencies); dimensions and alpha channel verified
+  from the PNG header, artwork visually verified.
+- `assets/phoca-metadata.json` image now points to the PNG — many wallets
+  don't render SVG; the SVG remains the master and the web asset. The
+  on-chain metadata URI is unchanged (it points to the JSON).
+- ROADMAP Phase 1 logo item closed. Mainnet reminder unchanged: metadata
+  and image move to permanent hosting (Arweave/Irys) at Phase 5.
+
 ### Added (Phase 2 — localnet integration tests, 2026-07-18)
 - `tests/integration/localnet.test.ts` + `npm run test:integration`: the
   REAL numbered scripts 01→05 run end to end as child processes against a
