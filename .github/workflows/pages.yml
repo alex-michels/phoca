@@ -1,0 +1,41 @@
+# Deploys site/ to GitHub Pages whenever it changes on main.
+# ACTIVATION IS A DELIBERATE OWNER STEP: this workflow does nothing useful
+# until you enable Settings → Pages → Source: "GitHub Actions". Publishing
+# the page is a public communication — the compliance wording rules
+# (docs/COMPLIANCE-EU.md Phase C) are already baked into site/index.html,
+# and the Phase 4 legal review applies before any active promotion.
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**"]
+  workflow_dispatch:
+
+# Least privilege: only what Pages deployment itself requires.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
