@@ -47,8 +47,12 @@ every artifact logged in DEVNET-LOG.md.
 - [x] Name-collision re-check (2026-07-12): DEX Screener + CoinGecko APIs
       returned zero PHOCA results; LEGAL-NOTES.md refreshed. EUIPO/TMview
       manual query stays on the Phase 4 counsel agenda 🔎
-- [ ] Decide charity focus list (seal rescue centers, research orgs) — NO
-      public naming yet, that needs written agreements (TOKENOMICS trust rule 3)
+- [x] Charity focus decided (2026-07-18, owner decision): CATEGORIES, not a
+      fixed org list — pinniped rescue first (seals, sea lions, fur seals),
+      from spontaneous disentanglement work to EU/worldwide rehab centers.
+      Policy + selection criteria + accountability rules in
+      docs/CHARITY-POLICY.md; still NO public naming without written
+      agreements (TOKENOMICS trust rule 3)
 
 **Exit criteria:** metadata renders correctly in a devnet wallet + explorer;
 story copy exists and passes the compliance wording rules; naming file updated.
